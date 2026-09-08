@@ -1,0 +1,45 @@
+*{box-sizing:border-box}body{margin:0;background:#f3f3f1;color:#171717;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif}.app{max-width:540px;margin:auto;min-height:100vh;padding-bottom:85px}header{padding:20px;display:flex;justify-content:space-between;align-items:center}h1,h2,h3,p{margin-top:0}.muted{color:#777;font-size:13px}button{border:0;background:#111;color:#fff;border-radius:11px;padding:11px 14px;font-weight:700}.light{background:#e9e9e6;color:#222}.back{background:none;color:#555;padding-left:0}main{padding:0 16px}.card{background:#fff;border-radius:17px;padding:17px;margin:10px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{min-height:105px}.stat b{display:block;font-size:27px;margin-top:8px}.bar{height:7px;background:#e8e8e6;border-radius:8px;overflow:hidden}.fill{height:100%;background:#222}.section{display:flex;justify-content:space-between;align-items:center;margin:20px 2px 8px}.row{display:flex;align-items:center;gap:11px;border-bottom:1px solid #eee;padding:13px 0}.row:last-child{border:0}.dot{width:20px;height:20px;border:1.5px solid #999;border-radius:6px;text-align:center;font-size:13px}.checked{background:#111;color:#fff}.tag{font-size:11px;padding:5px 8px;background:#eee;border-radius:15px}.current{border:1px solid #222;background:#fafafa;border-radius:12px;padding:14px;margin:10px 0}.warn{margin:7px 0;padding:10px 12px;background:#f6f6f4;border-radius:10px;font-size:13px}.next{border-left:3px solid #222;padding:13px;margin-top:12px;background:#f8f8f6;border-radius:0 12px 12px 0}.modal{display:none;position:fixed;inset:0;background:#0008;z-index:99999;align-items:flex-end;pointer-events:auto}.sheet{background:#fff;width:100%;max-width:540px;margin:auto;border-radius:24px 24px 0 0;padding:20px;max-height:88vh;overflow:auto}input,textarea,select{width:100%;border:1px solid #ddd;border-radius:10px;padding:12px;margin:6px 0 13px;font:inherit}textarea{min-height:90px}.actions{display:flex;gap:8px}.actions button{flex:1}.empty{text-align:center;color:#777;padding:30px 10px}.danger{color:#a33;float:right;cursor:pointer}.orderbtn{background:#eee;color:#222;padding:7px 9px;font-size:12px;border-radius:8px}.editbtn{background:#111;color:#fff;padding:7px 10px;font-size:12px;border-radius:8px}.hint{font-size:12px;color:#777;background:#f7f7f5;padding:10px;border-radius:10px;margin:8px 0}.checkpoint{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:5px 8px;border-radius:15px;background:#111;color:#fff;margin-left:6px}nav{position:fixed;bottom:0;left:0;right:0;background:#fffffff2;border-top:1px solid #ddd;z-index:4}nav div{max-width:540px;margin:auto;display:grid;grid-template-columns:repeat(6,1fr)}nav button{background:none;color:#777;border-radius:0;font-size:11px;padding:11px 4px}.active{color:#111!important;font-weight:800}
+
+
+/* ===== original style block ===== */
+
+
+/* 工種庫層級視覺：工種為父層，施工項目為子層 */
+.library-trade-title{font-size:24px!important;font-weight:800!important;margin:8px 0 4px!important;}
+.library-trade-section{margin-top:22px!important;}
+.library-subitems{border-left:3px solid #ddd;margin-left:8px;padding-left:10px;}
+.library-subitem{padding:13px 8px!important;}
+.library-subitem .sub-index{width:24px;height:24px;border-radius:7px;background:#eee;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none;}
+.library-trade-notes{background:#f7f7f5!important;}
+
+
+/* ===== original style block ===== */
+
+
+/* 工種庫真正兩層結構：首頁只顯示工種，施工項目降為摘要；進入後再展開第二層 */
+.library-trade-card{padding:18px!important;margin-bottom:14px!important;}
+.library-trade-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.library-home-trade-title{font-size:28px!important;line-height:1.15!important;font-weight:900!important;margin:10px 0 5px!important;letter-spacing:.02em;}
+.library-child-summary{margin:16px 0 0 4px;padding:12px 14px;border-left:4px solid #222;background:#f7f7f5;display:flex;flex-wrap:wrap;gap:8px 16px;}
+.library-child-summary span{font-size:13px;color:#555;}
+.library-child-summary b{font-size:10px;color:#999;margin-right:3px;}
+.library-enter{margin-top:12px;font-size:12px;font-weight:700;color:#777;}
+.library-trade-title{font-size:30px!important;font-weight:900!important;line-height:1.1!important;}
+.library-subitem{margin:4px 0!important;padding:15px 10px!important;border-radius:10px!important;}
+
+.library-photo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.library-photo{position:relative;background:#f5f5f3;border-radius:12px;overflow:hidden;border:1px solid #eee;}
+.library-photo img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#eee;}
+.library-photo-info{padding:9px 10px 10px;}
+.library-photo-title{font-weight:800;font-size:13px;line-height:1.35;}
+.library-photo-meta{font-size:11px;color:#888;margin-top:3px;}
+.library-photo-actions{display:flex;gap:6px;margin-top:7px;}
+.library-photo-actions button{font-size:11px;padding:6px 8px;}
+.library-photo-delete{background:#eee;color:#a33;}
+@media(max-width:390px){.library-photo-grid{grid-template-columns:1fr;}}
+
+
+/* ===== original style block ===== */
+
+
+#cloudMigrationBtn{position:fixed;right:14px;bottom:86px;z-index:9998;border:1px solid #ccc;background:#fff;color:#111;border-radius:999px;padding:10px 14px;font-weight:700;box-shadow:0 3px 14px rgba(0,0,0,.12);display:none}

@@ -1,0 +1,16 @@
+<!doctype html><html lang="zh-Hant"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111"><title>工程管理 V2</title>
+
+
+
+
+
+<link rel="stylesheet" href="css/style.css">
+</head><body><button id="cloudMigrationBtn" onclick="migrateExistingPhotosToDrive()">☁️ 搬移舊照片到雲端</button><div class="app">
+<header><div><div class="muted">FIELD / CONSTRUCTION</div><h1>工程管理</h1></div><div style="display:flex;gap:6px"><button class="light" onclick="backupData()">備份</button><button onclick="newProject()">＋</button></div></header><main id="main"></main>
+<nav><div><button class="active" onclick="home(this)">⌂<br>首頁</button><button onclick="projects(this)">▣<br>工程</button><button onclick="issues(this)">⚠<br>問題</button><button onclick="library(this)">☷<br>工種庫</button><button onclick="quoteGate()">¥<br>報價</button><button onclick="methods(this)">◇<br>工法</button></div></nav></div>
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+
+<script src="js/app.js"></script>
+</body></html>
