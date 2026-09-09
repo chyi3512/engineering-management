@@ -1,0 +1,11 @@
+﻿PASS all application scripts initialize without errors
+PASS report survives full browser restart
+PASS all main fields survive restart
+PASS photo metadata and bytes survive restart
+PASS ahead hides delay reason but retains day field
+PASS normal hides and disables extra validation
+PASS draft issue removal does not mutate stored issues
+PASS storage failure returns false
+PASS failed save preserves last stored report
+PASS edited report saves successfully
+PASS editing keeps same report ID

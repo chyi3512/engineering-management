@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111"><title>FAIL</title>
+<link rel="stylesheet" href="../css/style.css">
+</head><body><button id="cloudMigrationBtn" onclick="migrateExistingPhotosToDrive()">☁️ 搬移舊照片到雲端</button><div class="app">
+<header><div><div class="muted">FIELD / CONSTRUCTION</div><h1>工程管理</h1></div><div style="display:flex;gap:6px"><button class="light" onclick="backupData()">備份</button><button onclick="newProject()">＋</button></div></header><main id="main"><section class="daily-reports" id="dailyReportsRoot" data-project-id="1788936773713"><button type="button" class="light" data-daily-action="cancel">← 返回日報列表</button><form id="dailyReportForm"><fieldset id="dailyReportFields" disabled=""><div class="card"><h2>新增工程日報</h2><div class="muted">日報測試工程 A</div><label for="drDate">日期</label><input id="drDate" data-report-field="date" type="date" required="" value="2026-09-09"></div><div class="card"><h3>1. 今日工種</h3><div class="daily-trades"><label class="daily-check"><input type="checkbox" data-daily-trade="木作">木作</label><label class="daily-check"><input type="checkbox" data-daily-trade="水電">水電</label><label class="daily-check"><input type="checkbox" data-daily-trade="空調">空調</label></div></div><div class="card"><h3>2. 今天工作內容</h3><label for="drWork" class="muted">記錄今天完成的施工內容</label><textarea id="drWork" data-report-field="workContent" required="" rows="5" placeholder="例如：客廳天花封板完成"></textarea><button type="button" class="light" data-daily-action="schedule">＋ 從今日工程進度加入</button><div class="hint">依日報所選日期讀取現場預定施工項目。</div></div><div class="card"><h3>3. 現場照片</h3><div class="daily-actions"><button type="button" class="light" data-daily-action="upload">＋ 上傳照片</button><button type="button" class="light" data-daily-action="camera">＋ 拍照</button></div><input id="drPhotoFiles" type="file" accept="image/*" multiple="" hidden=""><input id="drCameraFile" type="file" accept="image/*" capture="environment" hidden=""><div id="drPhotos" class="daily-photos"></div></div><div class="card"><h3>4. 特記事項</h3><div id="drIssues"></div><button type="button" class="light" data-daily-action="add-issue">＋ 新增特記事項</button></div><div class="card"><h3>5. 今日進度</h3><div class="daily-trades"><label class="daily-check"><input type="radio" name="drProgress" data-report-field="progressStatus" value="正常" checked="">正常</label><label class="daily-check"><input type="radio" name="drProgress" data-report-field="progressStatus" value="提前">提前</label><label class="daily-check"><input type="radio" name="drProgress" data-report-field="progressStatus" value="延誤">延誤</label></div><div id="drProgressDetails" hidden=""><label for="drDays" id="drDaysLabel">延誤影響約幾天</label><input id="drDays" data-report-field="progressDays" type="number" min="0.5" step="0.5" value="" disabled=""><div id="drDelayFields" hidden=""><label for="drDelayReason">延誤原因</label><select id="drDelayReason" data-report-field="delayReason" disabled=""><option value="">請選擇</option><option value="前工種未完成">前工種未完成</option><option value="材料未到">材料未到</option><option value="現場變更">現場變更</option><option value="業主變更">業主變更</option><option value="施工問題">施工問題</option><option value="其他">其他</option></select><div id="drOtherReason" hidden=""><label for="drDelayOther">其他原因</label><textarea id="drDelayOther" data-report-field="delayReasonOther" disabled=""></textarea></div></div></div></div><div class="card"><h3>6. 下一個工種</h3><label for="drNextTrade">下一工種</label><select id="drNextTrade" data-report-field="nextTrade"><option value="">未設定</option><option value="木作">木作</option><option value="水電">水電</option><option value="空調">空調</option></select><label for="drNextDate">預計進場日期</label><input id="drNextDate" type="date" data-report-field="nextTradeDate" value=""><h3>進場前確認</h3><div id="drChecklist"></div><label for="drNewCheck">新增確認項目</label><input id="drNewCheck" placeholder="例如：材料到場"><button type="button" class="light" data-daily-action="add-check">＋ 新增確認項目</button></div><div class="daily-actions daily-save"><button type="submit">儲存今日工程日報</button><button type="button" class="light" data-daily-action="cancel">取消</button></div></fieldset></form><div id="dailyReportMessage" class="hint" role="status" hidden=""></div></section></main>
+<nav><div><button class="" onclick="home(this)">⌂<br>首頁</button><button onclick="projects(this)">▣<br>工程</button><button onclick="issues(this)">⚠<br>問題</button><button onclick="library(this)">☷<br>工種庫</button><button onclick="quoteGate()">¥<br>報價</button><button onclick="methods(this)">◇<br>工法</button></div></nav></div>
+<div class="modal" id="modal" style="display: none;"><div class="sheet" id="sheet"><div class="daily-reports"><h2>加入預定施工內容</h2><div class="muted">2020-01-01</div><div id="drScheduleChoices"><div class="empty">這一天沒有排定施工項目。</div></div><div class="daily-actions"><button type="button" class="light" onclick="closeModal()">取消</button><button type="button" id="drApplySchedule">加入工作內容</button></div></div></div></div>
+
+<script>window.dailyTestErrors=[];addEventListener("error",e=>dailyTestErrors.push(e.message));addEventListener("unhandledrejection",e=>dailyTestErrors.push(String(e.reason)));</script><script src="../js/data.js"></script>
+<script src="../js/app.js"></script>
+<script src="../js/photos.js"></script>
+<script src="../js/trades.js"></script>
+<script src="../js/schedule.js"></script>
+<script src="../js/projects.js"></script>
+<script src="../js/methods.js"></script>
+<script src="../js/daily-report-photos.js"></script>
+<script src="../js/daily-reports.js"></script>
+<script src="../js/daily-report-export.js"></script>
+<script src="../js/init.js"></script>
+<pre id="dailyTestResults">PASS all application scripts initialize without errors
+PASS existing project entry opens report history
+PASS date defaults to local today
+PASS project name is automatic
+PASS trade options come from both library sources
+PASS two trades can be selected
+PASS schedule picker appends selected work
+PASS schedule picker uses edited report date
+PASS picker does not discard typed work
+FAIL Error: Timed out
+    at waitFor (http://127.0.0.1:8766/tests/daily-reports-test.js:8:124)
+    at async addTestImage (http://127.0.0.1:8766/tests/daily-reports-test.js:13:125)
+    at async http://127.0.0.1:8766/tests/daily-reports-test.js:28:7</pre><script src="daily-reports-test.js"></script>
+</body></html>

@@ -31,38 +31,3 @@
 @media(max-width:390px){.library-photo-grid{grid-template-columns:1fr;}}
 
 #cloudMigrationBtn{position:fixed;right:14px;bottom:86px;z-index:9998;border:1px solid #ccc;background:#fff;color:#111;border-radius:999px;padding:10px 14px;font-weight:700;box-shadow:0 3px 14px rgba(0,0,0,.12);display:none}
-
-/* 指定區域：工種勾選、可折疊檢視與現場確認。 */
-#newProjectForm input[type=checkbox],.project-check input[type=checkbox]{width:20px;height:20px;margin:0;flex:none;accent-color:#222}
-.project-trade-label,.project-check{display:flex;align-items:center;gap:10px;cursor:pointer}
-.project-trade-label{flex:1}
-.schedule-view-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
-.schedule-view-tabs [aria-pressed=true]{background:#111;color:#fff}
-.library-trade-card summary{cursor:pointer}
-
-/* 工程日報：樣式僅套用於日報頁與日報 modal。 */
-.daily-reports{min-width:0;overflow-wrap:anywhere}
-.daily-reports h2{margin-bottom:8px}.daily-reports h3{font-size:17px}
-.daily-reports button,.daily-reports summary{min-height:44px;cursor:pointer;touch-action:manipulation}
-.daily-reports button:disabled{opacity:.55;cursor:wait}
-.daily-reports input,.daily-reports select,.daily-reports textarea{min-width:0;max-width:100%;font-size:16px}
-.daily-reports input[type=date]{min-height:46px;max-width:100%}
-.daily-reports textarea{resize:vertical;min-height:100px}
-.daily-reports input[type=checkbox],.daily-reports input[type=radio]{width:22px;height:22px;margin:0;flex:none;accent-color:#222}
-.daily-reports fieldset{border:0;padding:0;margin:0;min-width:0}
-.daily-reports .section{gap:8px;flex-wrap:wrap}
-.daily-actions,.daily-trades{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.daily-actions{margin-top:10px}.daily-actions button{flex:1;min-width:100px}
-.daily-check{display:flex;gap:10px;align-items:center;min-height:48px;cursor:pointer;padding:7px 0}
-.daily-trades .daily-check{padding:8px 12px;background:#f5f5f3;border-radius:10px}
-.daily-check-row{display:flex;align-items:center;gap:9px}.daily-check-row input:not([type=checkbox]){flex:1;margin:6px 0}
-.daily-report-open{display:block;width:100%;text-align:left;background:transparent;color:inherit;padding:0}
-.daily-report-open b{font-size:20px}.daily-report-open .muted{margin:8px 0}.daily-report-open p{margin:12px 0;white-space:pre-line}
-.daily-photos{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
-.daily-photo{min-width:0;border:1px solid #e8e8e5;border-radius:12px;padding:12px}
-.daily-photo img{display:block;width:100%;height:200px;object-fit:contain;background:#f4f4f2;border-radius:8px}
-.daily-photo button:has(img){width:100%;padding:0;background:transparent}
-.daily-photo-full{max-width:100%;max-height:65vh;display:block;object-fit:contain;margin:auto}
-.daily-subcard{border-left:3px solid #ddd;background:#f8f8f6;padding:12px;margin:14px 0;border-radius:8px}
-.daily-text{white-space:pre-wrap;line-height:1.7}.daily-save{padding:10px 0 20px}
-.daily-reports [hidden]{display:none!important}

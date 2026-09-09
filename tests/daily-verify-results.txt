@@ -1,0 +1,21 @@
+﻿PASS all application scripts initialize without errors
+PASS edited content persists after second restart
+PASS issue and checklist edits persist
+PASS second project starts with independent report history
+PASS second project report saves
+PASS project lists never mix records
+PASS Excel download generated real xlsx
+PASS xlsx can be reopened with two required sheets
+PASS Excel exports only current project with numeric days and date
+PASS Excel includes local thumbnail and photo notes
+PASS Excel export does not change any schedule
+PASS backup remains scoped with multiple projects
+PASS deletion waits for confirmation
+PASS cancel delete keeps report
+PASS confirmed deletion only affects selected project
+PASS photo file and camera controls are available
+PASS form does not overflow viewport
+PASS visible buttons have 44px touch targets
+PASS mobile checkbox is clickable without state reset
+PASS no duplicate IDs on report editor
+PASS no console JavaScript errors

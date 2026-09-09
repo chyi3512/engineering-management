@@ -1,0 +1,27 @@
+﻿PASS all application scripts initialize without errors
+PASS existing project entry opens report history
+PASS date defaults to local today
+PASS project name is automatic
+PASS trade options come from both library sources
+PASS two trades can be selected
+PASS schedule picker appends selected work
+PASS schedule picker uses edited report date
+PASS picker does not discard typed work
+PASS file input processes actual image
+PASS large image is resized before persistence
+PASS photo preview opens
+PASS issue processed status and photo attachment stored in draft
+PASS delay fields conditionally expand
+PASS entry checklist check and uncheck works
+PASS checklist can be unchecked
+PASS submit saves report and returns to history
+PASS report is scoped by projectId and reportId
+PASS localStorage contains photo metadata without Base64
+PASS compressed photo persists in IndexedDB
+PASS report changes never write project schedule or library
+PASS backup includes local photo bytes
+PASS local photo removal is scoped
+PASS photo backup restores IndexedDB
+PASS saved photo remains viewable
+PASS cancel does not mutate saved report
+PASS no runtime errors after create flow

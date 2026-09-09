@@ -1,0 +1,60 @@
+2026-09-09 | Isolated Chrome headless regression
+
+PASS all scripts initialize without JavaScript errors
+PASS library grouping never mutates example data
+PASS date validator rejects partial and impossible dates
+PASS three views use one schedule
+PASS typing partial year does not validate or save
+PASS partial date is ignored
+PASS complete reversed dates rejected without mutation
+PASS complete date blur updates timeline
+PASS category change moves actual timeline bar
+PASS correcting category moves bar back
+PASS item name edit refreshes timeline
+PASS group name edit refreshes timeline
+PASS weekly tab shows spanning final week
+PASS Sunday to Monday item appears in both weeks
+PASS trade tab lists items and dates
+PASS parent checkbox selects every child
+PASS folding is independent of selection
+PASS partial selection is represented
+PASS create button enabled
+PASS form submit creates one project
+PASS duplicate submit cannot create twice
+PASS schedule dates shift from example
+PASS baseline and actual are deeply independent
+PASS site checkbox can be checked
+PASS site checkbox can be unchecked
+PASS confirmation persists after rendering
+PASS rejected actual dates leave all saved state intact
+PASS editing actual leaves baseline untouched
+PASS baseline UI is read only
+PASS reordering actual does not change baseline
+PASS trade note add saves correct source
+PASS trade note edit
+PASS trade note delete
+PASS same name custom trade keeps independent notes
+PASS example details missing helper fixed
+PASS existing photo section still available
+PASS existing navigation renders
+PASS blank project name is visibly rejected
+PASS no trades selected still creates independent default schedules
+PASS undated custom item defaults to one day
+PASS old project data is unchanged
+PASS old empty project opens safely
+PASS no runtime event errors
+
+Reload persistence
+PASS all scripts initialize without JavaScript errors
+PASS project survives reload
+PASS site confirmation survives reload
+PASS note checkbox survives reload
+PASS baseline survives reload independently
+PASS baseline refrozen after reload
+PASS trade notes persist independently
+PASS custom library notes persist
+PASS quote edits survive startup
+PASS render uses saved site confirmation
+
+PASS original and revised timeline HTML exactly equal for identical uncategorized fixture
+PASS new project form screenshot visually inspected
