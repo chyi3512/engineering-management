@@ -1,0 +1,18 @@
+﻿PASS all production scripts load without console errors
+PASS check completion survives browser reload
+PASS notes status attendance and issues persist
+PASS appointment does not repeat after reload
+PASS day and report photos both survive reload
+PASS old project remains independent after reload
+PASS next day gets due appointment exactly once
+PASS new day does not copy yesterday completion or attendance
+PASS refresh leaves input text intact
+PASS notes and status dialog opens on small screen
+PASS detail page fits viewport
+PASS checkbox label touch target is at least 44px
+PASS photo upload supports multiple files and camera
+PASS new input IDs do not overwrite any functions
+PASS original schedule/quote snapshot still matches after reload
+PASS no duplicate DOM IDs
+PASS no console errors or unhandled rejections
+PASS physical touch event toggles checklist

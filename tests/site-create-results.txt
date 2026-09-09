@@ -1,0 +1,42 @@
+﻿PASS all production scripts load without console errors
+PASS new project still creates schedule and baseline
+PASS opening detail does not create empty persisted day records
+PASS requested sections retain order
+PASS old suggested work, issue, history entrypoints retained
+PASS IME confirmation does not prematurely create an item
+PASS Enter creates exactly one item per entry
+PASS no add button in today checklist
+PASS completed item remains visible and checked
+PASS can uncheck completed item
+PASS rerender preserves completed status
+PASS attendance uses actual trade names and saves selections
+PASS item photo uploaded with independent metadata
+PASS conversion creates issue in existing issue storage
+PASS conversion is idempotent
+PASS converted issue appears in original issue page
+PASS appointment due today added automatically
+PASS repeated rerender does not duplicate appointment
+PASS future appointment stays out of today checklist
+PASS multi-upload stores three photos including item attachment
+PASS new photos stored in IndexedDB, not Base64 project storage
+PASS generate button stores formal report and opens preview
+PASS report automatically includes checks attendance appointments photos
+PASS report excludes invented progress and next trade sections
+PASS generated report has no shared mutable references
+PASS report photo preview renders saved bytes
+PASS Excel reopens with one formal report sheet
+PASS Excel print setup is A4 portrait one page
+PASS Excel embeds all local photos
+PASS Excel includes full notes and appointments
+PASS PDF source includes all photos and excludes prohibited content
+PASS PDF declares A4 portrait
+PASS generation/export never changes schedules or library
+PASS backup includes day photo and independent report snapshot bytes
+PASS restore understands new daily and report photo records
+PASS editing source leaves generated report notes untouched
+PASS deleting source photo leaves report photo intact
+PASS storage failure rolls back daily mutation
+PASS legacy project without site fields opens safely
+PASS different projects remain independent
+PASS all original schedule and quote data remain unchanged
+PASS no console errors or unhandled rejections

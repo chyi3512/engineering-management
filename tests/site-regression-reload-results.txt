@@ -1,0 +1,10 @@
+﻿PASS all scripts initialize without JavaScript errors
+PASS project survives reload
+PASS site confirmation survives reload
+PASS note checkbox survives reload
+PASS baseline survives reload independently
+PASS baseline refrozen after reload
+PASS trade notes persist independently
+PASS custom library notes persist
+PASS quote edits survive startup
+PASS render uses saved site confirmation

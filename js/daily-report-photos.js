@@ -67,8 +67,11 @@ async function removeDailyPhotoFiles(report,photos){
   const local=photos.filter(photo=>photo.storage==='indexeddb');
   if(local.length)await dailyPhotoStore('readwrite',store=>{local.forEach(photo=>store.delete(dailyPhotoKey(report.projectId,report.id,photo.id)));});
 }
+function allStoredDailyPhotoRecords(construction){
+  return [...(construction.dailyReports||[]),...(construction.projects||[]).flatMap(project=>[...Object.values(project.siteDays||{}),...(project.siteReports||[])])];
+}
 async function collectDailyReportPhotoBackup(){
-  const reports=Array.isArray(data.dailyReports)?data.dailyReports:[],out=[];
+  const reports=allStoredDailyPhotoRecords(data),out=[];
   for(const report of reports)for(const photo of report.photos||[]){
     if(photo.storage!=='indexeddb')continue;
     const blob=await dailyPhotoBlob(report,photo);
@@ -80,7 +83,7 @@ async function collectDailyReportPhotoBackup(){
 async function restoreDailyReportPhotoBackup(entries,construction){
   if(!Array.isArray(entries)||!entries.length)return;
   const records=entries.map(entry=>{
-    const report=construction?.dailyReports?.find(r=>String(r.projectId)===String(entry.projectId)&&String(r.id)===String(entry.reportId));
+    const report=allStoredDailyPhotoRecords(construction||{}).find(r=>String(r.projectId)===String(entry.projectId)&&String(r.id)===String(entry.reportId));
     if(!report?.photos?.some(p=>p.id===entry.photoId&&p.storage==='indexeddb'))throw new Error('日報照片與備份紀錄不一致');
     return {key:dailyPhotoKey(entry.projectId,entry.reportId,entry.photoId),projectId:entry.projectId,reportId:entry.reportId,photoId:entry.photoId,blob:dailyDataURLBlob(entry.data)};
   });

@@ -65,6 +65,16 @@ function timelineDates(min,max){
   return arr;
 }
 
+// 僅供 2022 工程範例的建議施工時間圖使用。維持獨立日期清單，
+// 不會改變工程資料、週末判斷或任何工種／時程的顯示邏輯。
+const JAPAN_HOLIDAYS_2022=new Set([
+  '2022-01-01','2022-01-10','2022-02-11','2022-02-23','2022-03-21',
+  '2022-04-29','2022-05-03','2022-05-04','2022-05-05','2022-07-18',
+  '2022-08-11','2022-09-19','2022-09-23','2022-10-10','2022-11-03','2022-11-23'
+]);
+function timelineDateISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function isJapanHoliday2022(d){return JAPAN_HOLIDAYS_2022.has(timelineDateISO(d));}
+
 function timelineHTML(items){
   items=items.filter(x=>isCompleteScheduleDate(x.start)&&(!x.end||isCompleteScheduleDate(x.end))).map(x=>({...x,trade:scheduleGroupName(x)}));
   // 上方「建議施工時間圖」與下方「工程進度表」使用同一批 items。
@@ -72,6 +82,7 @@ function timelineHTML(items){
   const b=timelineBounds(items);
   if(!b)return '<div class="empty">目前還沒有設定日期，先在下面的工程進度表輸入開始／結束日期。</div>';
   const dates=timelineDates(b.min,b.max), total=dates.length, px=Math.max(18,total*22);
+  const holidayColumns=dates.map(d=>'<div'+(isJapanHoliday2022(d)?' style="background:rgba(255,90,90,.07)"':'')+'></div>').join('');
   const trades=[];
   items.forEach(x=>{if(x.start&&!trades.includes(x.trade))trades.push(x.trade)});
   const palette=['#666','#777','#888','#999','#aaa','#555','#777','#777'];
@@ -85,9 +96,9 @@ function timelineHTML(items){
     }).join('');
     return '<div style="display:grid;grid-template-columns:82px 1fr;border-bottom:1px solid #eee;min-height:36px">'+
       '<div style="padding:9px 6px;font-size:11px;font-weight:700;white-space:nowrap"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+palette[ri%palette.length]+';margin-right:5px"></span>'+esc(trade)+'</div>'+
-      '<div style="position:relative;height:36px;background-image:linear-gradient(to right,#eee 1px,transparent 1px);background-size:'+(100/total)+'% 100%">'+bars+'</div></div>';
+      '<div style="position:relative;height:36px;background-image:linear-gradient(to right,#eee 1px,transparent 1px);background-size:'+(100/total)+'% 100%"><div aria-hidden="true" style="position:absolute;inset:0;display:grid;grid-template-columns:repeat('+total+',1fr);pointer-events:none">'+holidayColumns+'</div>'+bars+'</div></div>';
   }).join('');
-  const heads=dates.map((d,i)=>'<div style="min-width:22px;text-align:center;font-size:9px;color:#777">'+(i===0||d.getDate()===1?((d.getMonth()+1)+'/'+d.getDate()):d.getDate())+'</div>').join('');
+  const heads=dates.map((d,i)=>'<div style="min-width:22px;text-align:center;font-size:9px;color:#777'+(isJapanHoliday2022(d)?';background:rgba(255,90,90,.07)':'')+'">'+(i===0||d.getDate()===1?((d.getMonth()+1)+'/'+d.getDate()):d.getDate())+'</div>').join('');
   return '<div style="overflow-x:auto" class="schedule-timeline-scroll"><div style="min-width:'+px+'px">'+
     '<div style="display:flex;justify-content:space-between;gap:10px;padding:0 4px 8px;font-size:11px;color:#777"><span>日期來源：下方工程進度表</span><b>'+esc(fmtDate(b.max.toISOString().slice(0,10)))+'</b></div>'+
     '<div style="display:grid;grid-template-columns:82px 1fr;border-bottom:1px solid #ddd"><div></div><div style="display:grid;grid-template-columns:repeat('+total+',1fr)">'+heads+'</div></div>'+

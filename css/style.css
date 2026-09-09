@@ -66,3 +66,33 @@
 .daily-subcard{border-left:3px solid #ddd;background:#f8f8f6;padding:12px;margin:14px 0;border-radius:8px}
 .daily-text{white-space:pre-wrap;line-height:1.7}.daily-save{padding:10px 0 20px}
 .daily-reports [hidden]{display:none!important}
+
+/* 僅工程詳細頁新增的每日現場紀錄與正式日報。 */
+.project-site{min-width:0;overflow-wrap:anywhere}
+.project-site button,.project-site summary{min-height:44px;touch-action:manipulation;cursor:pointer}
+.project-site input,.project-site textarea,.project-site select{font-size:16px;min-width:0;max-width:100%}
+.project-site [hidden]{display:none!important}
+.project-site button:disabled{opacity:.5;cursor:default}
+.project-site .site-check{display:flex;align-items:center;gap:9px;min-width:44px;min-height:44px;cursor:pointer;margin:0}
+.project-site input[type=checkbox]{width:22px;height:22px;flex:none;margin:0;accent-color:#222}
+.site-check-row{display:flex;align-items:center;border-bottom:1px solid #eee;gap:0}
+.project-site .site-item-text{flex:1;min-width:0;background:none;color:inherit;text-align:left;padding:10px 0;font-weight:400;white-space:pre-wrap}
+.site-item-text small{display:block;margin-top:4px}
+.site-trades,.site-actions{display:flex;gap:8px 14px;flex-wrap:wrap}
+.site-actions{margin:12px 0}.site-trades .site-check{padding:2px 6px}
+.site-photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+.site-photo{min-width:0}.site-photo input{margin:7px 0}
+.project-site .site-photo-preview{width:100%;padding:0;background:#f4f4f2}
+.site-photo img{display:block;width:100%;height:150px;object-fit:contain}
+.site-report-preview{background:#fff;padding:16px;margin:16px 0;border-radius:12px}
+.site-report-preview header{display:block;padding:0 0 12px;border-bottom:2px solid #222;margin-bottom:14px}
+.site-report-preview h1{font-size:26px;margin:5px 0}.site-report-preview h2{font-size:16px;margin:20px 0 8px}
+.site-report-preview table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:12px}
+.site-report-preview th,.site-report-preview td{border:1px solid #ddd;padding:6px;vertical-align:top;overflow-wrap:anywhere;text-align:left}
+.site-report-preview th{background:#f3f3f3}.site-report-preview p{white-space:pre-wrap;font-size:13px}
+.site-report-kicker,.report-small{font-size:11px;color:#777}
+.site-report-photos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.site-report-photos figure{margin:0}.site-report-photos img{width:100%;height:140px;object-fit:contain;background:#fafafa}
+.site-report-photos figcaption{font-size:12px;white-space:pre-wrap}
+.site-report-preview footer{font-size:11px;color:#777;border-top:1px solid #ddd;margin-top:20px;padding-top:8px}
+@media(max-width:360px){.site-photos{grid-template-columns:1fr}.site-report-preview{padding:10px}.site-report-preview th,.site-report-preview td{padding:4px}}
