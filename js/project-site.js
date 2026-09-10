@@ -6,7 +6,7 @@ function projectSiteDay(project,date=projectSiteDate()){
   return project.siteDays?.[date]||{id:'site:'+date,projectId:project.id,date,checks:[],trades:[],photos:[]};
 }
 function projectSiteUpdate(project,update){
-  const keys=['siteDays','siteAppointments','siteReports'],previous=keys.map(key=>({key,had:Object.prototype.hasOwnProperty.call(project,key),value:project[key]}));
+  const keys=['siteDays','siteAppointments','siteReports','nextSiteConfirmation','communicationItems'],previous=keys.map(key=>({key,had:Object.prototype.hasOwnProperty.call(project,key),value:project[key]}));
   for(const entry of previous)if(entry.had)project[entry.key]=JSON.parse(JSON.stringify(entry.value));
   try{update();save();}catch(error){for(const entry of previous){if(entry.had)project[entry.key]=entry.value;else delete project[entry.key];}throw error;}
 }
@@ -14,6 +14,14 @@ function projectSiteWriteDay(project,date,update){
   projectSiteUpdate(project,()=>{project.siteDays||={};project.siteDays[date]||=projectSiteDay(project,date);update(project.siteDays[date]);});
 }
 function projectSiteCheck(text,appointmentId=''){return {id:dailyReportId(),text,done:false,note:'',status:'待確認',photoIds:[],appointmentId};}
+function nextSiteConfirmation(project){
+  if(project.nextSiteConfirmation&&Array.isArray(project.nextSiteConfirmation.checks))return project.nextSiteConfirmation;
+  // 舊版「今日」資料只在首次開啟時複製到新的持久確認清單，原始每日資料仍保留。
+  const legacy=Object.values(project.siteDays||{}).sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0];
+  project.nextSiteConfirmation={id:'next-site:'+project.id,checks:JSON.parse(JSON.stringify(legacy?.checks||[])),createdAt:new Date().toISOString()};
+  save();return project.nextSiteConfirmation;
+}
+function projectCommunicationItems(project){return Array.isArray(project.communicationItems)?project.communicationItems:[];}
 function ensureProjectSiteAppointments(project,date=projectSiteDate()){
   const due=(project.siteAppointments||[]).filter(item=>!item.generatedItemId&&isCompleteScheduleDate(item.date)&&item.date<=date);
   if(!due.length)return false;
@@ -29,12 +37,13 @@ function ensureProjectSiteAppointments(project,date=projectSiteDate()){
   });return true;
 }
 function projectSiteTopHTML(project){
-  const day=projectSiteDay(project),date=day.date;
-  return '<section class="project-site" data-site-project="'+esc(project.id)+'" data-site-date="'+date+'"><div class="section"><b>現場確認（今日）</b><span class="muted">'+date+'</span></div><div class="card"><div data-site-checks>'+projectSiteChecksHTML(day)+'</div><input data-site-new-check aria-label="新增現場確認事項" placeholder="輸入事項，按 Enter 新增" autocomplete="off"><div class="muted" data-site-message role="status"></div></div><div class="section"><b>今日到場</b></div><div class="card site-trades">'+[...new Set([...dailyTradeNames(),...(project.steps||[]).map(step=>step.trade),...day.trades])].filter(Boolean).map(trade=>'<label class="site-check"><input type="checkbox" data-site-trade="'+esc(trade)+'" '+(day.trades.includes(trade)?'checked':'')+'><span>'+esc(trade)+'</span></label>').join('')+'</div></section>';
+  const confirmation=nextSiteConfirmation(project);
+  return '<section class="project-site" data-site-project="'+esc(project.id)+'" data-site-persistent="true"><div class="section"><b>下次現場確認</b><span class="muted">持續保留</span></div><div class="card"><div data-site-checks>'+projectSiteChecksHTML(confirmation)+'</div><input data-site-new-check aria-label="新增下次現場確認事項" placeholder="輸入事項，按 Enter 新增" autocomplete="off"><div class="muted" data-site-message role="status"></div></div><div class="section"><b>現場問題／溝通事項</b></div><div class="card"><div data-site-communication>'+projectCommunicationHTML(project)+'</div><input data-site-new-communication aria-label="新增現場問題或溝通事項" placeholder="輸入事項，按 Enter 新增" autocomplete="off"><div class="muted" data-site-message role="status"></div></div></section>';
 }
 function projectSiteChecksHTML(day){
-  return day.checks.map(item=>'<div class="site-check-row"><label class="site-check" aria-label="完成 '+esc(item.text)+'"><input type="checkbox" data-site-check="'+esc(item.id)+'" '+(item.done?'checked':'')+'></label><button class="site-item-text" data-site-action="detail" data-item-id="'+esc(item.id)+'"><span>'+esc(item.text)+'</span><small class="muted">'+(item.done?'已完成 · ':'')+esc(item.status)+(item.note?' · 備註':'')+(item.photoIds.length?' · 照片 '+item.photoIds.length:'')+(item.issueId?' · 已轉為問題':'')+'</small></button></div>').join('')||'<p class="muted">尚無確認事項</p>';
+  return (day.checks||[]).map(item=>'<div class="site-check-row"><label class="site-check" aria-label="完成 '+esc(item.text)+'"><input type="checkbox" data-site-check="'+esc(item.id)+'" '+(item.done?'checked':'')+'></label><button class="site-item-text" data-site-action="detail" data-item-id="'+esc(item.id)+'"><span>'+esc(item.text)+'</span><small class="muted">'+(item.done?'已完成 · ':'')+esc(item.status)+(item.note?' · 備註':'')+((item.photoIds||[]).length?' · 照片 '+item.photoIds.length:'')+(item.issueId?' · 已轉為問題':'')+'</small></button></div>').join('')||'<p class="muted">尚無確認事項</p>';
 }
+function projectCommunicationHTML(project){return projectCommunicationItems(project).map(item=>'<div class="site-check-row"><label class="site-check" aria-label="完成 '+esc(item.text)+'"><input type="checkbox" data-site-communication-check="'+esc(item.id)+'" '+(item.done?'checked':'')+'></label><button class="site-item-text" data-site-action="communication-detail" data-item-id="'+esc(item.id)+'"><span>'+esc(item.text)+'</span><small class="muted">'+(item.done?'已完成':'待處理')+(item.note?' · 備註':'')+'</small></button></div>').join('')||'<p class="muted">尚無現場問題或溝通事項</p>';}
 function projectSiteBottomHTML(project){
   const day=projectSiteDay(project);
   return '<section class="project-site" data-site-project="'+esc(project.id)+'" data-site-date="'+day.date+'"><div class="section"><b>預約／後續事項</b></div><div class="card"><div data-site-appointments>'+projectSiteAppointmentsHTML(project)+'</div><form data-site-appointment-form><label>預約日期<input type="date" name="date" value="'+day.date+'" required></label><label>事項<input name="text" placeholder="輸入事項，按 Enter 儲存" required></label><button type="submit" class="light">儲存預約</button></form></div><div class="section"><b>今日照片</b></div><div class="card"><div class="site-actions"><button class="light" data-site-action="upload">上傳多張照片</button><button class="light" data-site-action="camera">拍照</button></div><input type="file" accept="image/*" multiple data-site-files hidden><input type="file" accept="image/*" capture="environment" data-site-camera hidden><div class="site-photos" data-site-photos>'+projectSitePhotosHTML(day)+'</div><div data-site-message class="muted" role="status"></div></div><div class="section"><b>產生今日工程日報</b></div><div class="card"><p class="muted">直接帶入今天的現場確認、到場工種、預約事項與照片。</p><button data-site-action="generate">產生今日工程日報</button><div data-site-history>'+(project.siteReports||[]).slice().reverse().map(report=>'<div class="row"><button class="light" data-site-action="view-report" data-report-id="'+esc(report.id)+'">'+esc(report.date)+' 日報 · '+esc(new Date(report.createdAt).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}))+'</button></div>').join('')+'</div><div data-site-message class="muted" role="status"></div></div></section>';
@@ -55,7 +64,11 @@ function bindProjectSite(project){
     root.addEventListener('keydown',event=>{
       if(event.target.matches('[data-site-new-check]')&&event.key==='Enter'&&!event.isComposing&&event.keyCode!==229){
         event.preventDefault();const text=event.target.value.trim();if(!text)return;
-        try{projectSiteWriteDay(project,root.dataset.siteDate,day=>day.checks.push(projectSiteCheck(text)));event.target.value='';root.querySelector('[data-site-checks]').innerHTML=projectSiteChecksHTML(projectSiteDay(project,root.dataset.siteDate));}catch(error){projectSiteMessage(root,'尚未儲存：'+error.message);}
+        try{if(root.dataset.sitePersistent)projectSiteUpdate(project,()=>nextSiteConfirmation(project).checks.push(projectSiteCheck(text)));else projectSiteWriteDay(project,root.dataset.siteDate,day=>day.checks.push(projectSiteCheck(text)));event.target.value='';root.querySelector('[data-site-checks]').innerHTML=projectSiteChecksHTML(root.dataset.sitePersistent?nextSiteConfirmation(project):projectSiteDay(project,root.dataset.siteDate));}catch(error){projectSiteMessage(root,'尚未儲存：'+error.message);}
+      }
+      if(event.target.matches('[data-site-new-communication]')&&event.key==='Enter'&&!event.isComposing&&event.keyCode!==229){
+        event.preventDefault();const text=event.target.value.trim();if(!text)return;
+        try{projectSiteUpdate(project,()=>{project.communicationItems||=[];project.communicationItems.push({id:dailyReportId(),text,note:'',done:false,createdAt:new Date().toISOString()});});event.target.value='';root.querySelector('[data-site-communication]').innerHTML=projectCommunicationHTML(project);}catch(error){projectSiteMessage(root,'尚未儲存：'+error.message);}
       }
     });
     root.addEventListener('submit',event=>{
@@ -69,8 +82,8 @@ function bindProjectSite(project){
 function refreshProjectSite(project){
   for(const root of main.querySelectorAll('[data-site-project]')){
     if(String(project.id)!==root.dataset.siteProject)continue;
-    const day=projectSiteDay(project,root.dataset.siteDate),checks=root.querySelector('[data-site-checks]'),appointments=root.querySelector('[data-site-appointments]'),photos=root.querySelector('[data-site-photos]');
-    if(checks)checks.innerHTML=projectSiteChecksHTML(day);if(appointments)appointments.innerHTML=projectSiteAppointmentsHTML(project);
+    const day=root.dataset.sitePersistent?nextSiteConfirmation(project):projectSiteDay(project,root.dataset.siteDate),checks=root.querySelector('[data-site-checks]'),appointments=root.querySelector('[data-site-appointments]'),photos=root.querySelector('[data-site-photos]'),communication=root.querySelector('[data-site-communication]');
+    if(checks)checks.innerHTML=projectSiteChecksHTML(day);if(communication)communication.innerHTML=projectCommunicationHTML(project);if(appointments)appointments.innerHTML=projectSiteAppointmentsHTML(project);
     if(photos){photos.innerHTML=projectSitePhotosHTML(day);loadDailyPhotoImages(day,photos);}
   }
 }
@@ -79,7 +92,8 @@ function projectSiteInput(event){
   const project=dailyProject(root.dataset.siteProject),date=root.dataset.siteDate;if(!project)return;
   if(input.matches('[data-site-files],[data-site-camera]')){if(event.type==='change'){const files=Array.from(input.files);input.value='';addProjectSitePhotos(project,date,files,root.dataset.siteItem||'',root);}return;}
   try{
-    if(input.hasAttribute('data-site-check')){projectSiteWriteDay(project,date,day=>{const item=day.checks.find(check=>check.id===input.dataset.siteCheck);if(item)item.done=input.checked;});const row=input.closest('.site-check-row');row.outerHTML=projectSiteChecksHTML({...projectSiteDay(project,date),checks:projectSiteDay(project,date).checks.filter(item=>item.id===input.dataset.siteCheck)});}
+    if(input.hasAttribute('data-site-check')){if(root.dataset.sitePersistent)projectSiteUpdate(project,()=>{const item=nextSiteConfirmation(project).checks.find(check=>check.id===input.dataset.siteCheck);if(item)item.done=input.checked;});else projectSiteWriteDay(project,date,day=>{const item=day.checks.find(check=>check.id===input.dataset.siteCheck);if(item)item.done=input.checked;});refreshProjectSite(project);}
+    if(input.hasAttribute('data-site-communication-check')){projectSiteUpdate(project,()=>{const item=projectCommunicationItems(project).find(item=>item.id===input.dataset.siteCommunicationCheck);if(item)item.done=input.checked;});refreshProjectSite(project);}
     if(input.hasAttribute('data-site-trade'))projectSiteWriteDay(project,date,day=>{day.trades=input.checked?[...new Set([...day.trades,input.dataset.siteTrade])]:day.trades.filter(trade=>trade!==input.dataset.siteTrade);});
     if(input.hasAttribute('data-site-caption'))projectSiteWriteDay(project,date,day=>{const photo=day.photos.find(photo=>photo.id===input.dataset.siteCaption);if(photo)photo.description=input.value;});
   }catch(error){if(input.type==='checkbox')input.checked=!input.checked;projectSiteMessage(root,'尚未儲存：'+error.message);}
@@ -89,7 +103,8 @@ async function projectSiteAction(event){
   const root=button.closest('[data-site-project]'),project=dailyProject(root?.dataset.siteProject),date=root?.dataset.siteDate;if(!project)return;
   const action=button.dataset.siteAction;
   try{
-    if(action==='detail')openProjectSiteItem(project.id,date,button.dataset.itemId);
+    if(action==='detail'){if(root.dataset.sitePersistent)openNextSiteConfirmationItem(project.id,button.dataset.itemId);else openProjectSiteItem(project.id,date,button.dataset.itemId);}
+    if(action==='communication-detail')openProjectCommunicationItem(project.id,button.dataset.itemId);
     if(action==='upload'||action==='camera')root.querySelector(action==='camera'?'[data-site-camera]':'[data-site-files]').click();
     if(action==='remove-appointment'){projectSiteUpdate(project,()=>{project.siteAppointments=project.siteAppointments.filter(item=>item.id!==button.dataset.itemId||item.generatedItemId);});refreshProjectSite(project);}
     if(action==='remove-photo'){
@@ -110,6 +125,21 @@ async function projectSiteAction(event){
     }
     if(action==='view-report')viewProjectSiteReport(project.id,button.dataset.reportId);
   }catch(error){projectSiteMessage(root,'未完成：'+error.message);}finally{button.disabled=false;}
+}
+function openNextSiteConfirmationItem(projectId,itemId){
+  const project=dailyProject(projectId),confirmation=nextSiteConfirmation(project),item=confirmation.checks.find(item=>item.id===itemId);if(!item)return;
+  openModal('<div class="project-site"><h2>'+esc(item.text)+'</h2><label>備註<textarea id="nextSiteNote">'+esc(item.note||'')+'</textarea></label><label>處理狀態<select id="nextSiteStatus">'+dailyOptions(SITE_STATUSES,item.status)+'</select></label><div class="actions"><button class="light" id="nextSiteConvert" '+(item.issueId?'disabled':'')+'>'+ (item.issueId?'已轉為問題':'轉為問題')+'</button><button id="nextSiteClose">完成</button></div><p class="muted" id="nextSiteMessage"></p></div>');
+  const persist=()=>{try{projectSiteUpdate(project,()=>{const current=nextSiteConfirmation(project).checks.find(check=>check.id===itemId);if(current){current.note=document.getElementById('nextSiteNote').value;current.status=document.getElementById('nextSiteStatus').value;}});return true;}catch(error){document.getElementById('nextSiteMessage').textContent='未能儲存：'+error.message;return false;}};
+  document.getElementById('nextSiteNote').addEventListener('input',persist);document.getElementById('nextSiteStatus').addEventListener('change',persist);
+  document.getElementById('nextSiteClose').onclick=()=>{if(persist()){closeModal();refreshProjectSite(project);}};
+  document.getElementById('nextSiteConvert').onclick=function(){if(!persist())return;const current=nextSiteConfirmation(project).checks.find(check=>check.id===itemId);if(!current||current.issueId)return;const issue={id:dailyReportId(),title:current.text,note:current.note||'',priority:'一般',status:current.status,project:project.name,projectId:project.id,date:new Date().toLocaleDateString('zh-TW'),siteItemId:itemId};projectSiteUpdate(project,()=>{current.issueId=issue.id;data.issues.unshift(issue);project.issueCount=(Number(project.issueCount)||0)+1;});this.disabled=true;this.textContent='已轉為問題';refreshProjectSite(project);};
+}
+function openProjectCommunicationItem(projectId,itemId){
+  const project=dailyProject(projectId),item=projectCommunicationItems(project).find(item=>item.id===itemId);if(!item)return;
+  openModal('<div class="project-site"><h2>現場問題／溝通事項</h2><label>事項<input id="communicationText" value="'+esc(item.text)+'"></label><label>備註<textarea id="communicationNote">'+esc(item.note||'')+'</textarea></label><div class="actions"><button class="light" id="communicationDelete">刪除</button><button id="communicationClose">儲存</button></div><p class="muted" id="communicationMessage"></p></div>');
+  const persist=()=>{const text=document.getElementById('communicationText').value.trim();if(!text){document.getElementById('communicationMessage').textContent='請輸入事項。';return false;}try{projectSiteUpdate(project,()=>{const current=projectCommunicationItems(project).find(row=>row.id===itemId);if(current){current.text=text;current.note=document.getElementById('communicationNote').value;}});return true;}catch(error){document.getElementById('communicationMessage').textContent='未能儲存：'+error.message;return false;}};
+  document.getElementById('communicationClose').onclick=()=>{if(persist()){closeModal();refreshProjectSite(project);}};
+  document.getElementById('communicationDelete').onclick=()=>{if(!confirm('確定刪除這項溝通事項？'))return;projectSiteUpdate(project,()=>{project.communicationItems=(project.communicationItems||[]).filter(row=>row.id!==itemId);});closeModal();refreshProjectSite(project);};
 }
 function openProjectSiteItem(projectId,date,itemId){
   const project=dailyProject(projectId),day=projectSiteDay(project,date),item=day.checks.find(item=>item.id===itemId);if(!item)return;

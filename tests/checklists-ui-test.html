@@ -1,0 +1,44 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="../css/style.css"><title>Checklist test</title>
+<style>.app{width:min(100%,390px);margin:0}pre{white-space:pre-wrap}</style>
+<div class="app"><main id="main"></main><pre id="results"></pre></div>
+<script>
+let serial=0,saved='',failSave=false;
+const main=document.getElementById('main'),data={projects:[{id:1,name:'A工程',workflow:{nodes:[{id:'pipe',name:'給排水配管',trade:'水電'}]}},{id:2,name:'B工程',workflow:{nodes:[{id:'pipe',name:'給排水配管',trade:'水電'}]}}]};
+function workflowId(){return 'id-'+ ++serial;}
+function esc(s){return String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');}
+function save(){if(failSave)throw Error('storage full');saved=JSON.stringify(data);}
+function openModal(){throw Error('Unexpected modal');}function alert(){}function confirm(){return true;}
+</script><script src="../js/checklists.js"></script><script>
+const results=[];
+function assert(value,text){if(!value)throw Error(text);results.push('PASS '+text);}
+function submit(text){const form=main.querySelector('form');form.querySelector('input').value=text;form.requestSubmit();}
+try{
+checklistHome();checklistQuickOpen(0);submit('水電進場／定位');
+assert(data.checklistLibrary[0].nodes.length===1,'inline node creation');
+assert(main.querySelector('form input').value==='','next empty node input');
+checklistHome();checklistQuickOpen(0,0);
+const input=main.querySelector('form input');input.value='中文組字';input.dispatchEvent(new CompositionEvent('compositionstart'));main.querySelector('form').requestSubmit();
+assert(data.checklistLibrary[0].nodes[0].items.length===0,'IME does not submit');input.dispatchEvent(new CompositionEvent('compositionend'));
+submit('給水、排水位置與圖面確認');submit('冷熱水出水位置、高度確認');
+assert(JSON.parse(saved).checklistLibrary[0].nodes[0].items.length===2,'each submission saved');
+assert(main.querySelector('form input').value===''&&document.activeElement===main.querySelector('form input'),'continuous entry retains empty focused input');
+failSave=true;submit('不得遺失');assert(main.querySelector('form input').value==='不得遺失'&&data.checklistLibrary[0].nodes[0].items.length===2,'failed save retains input and rolls back');failSave=false;
+checklistHome();checklistOpenEditor(0,0,0,'item');submit('修改第一項');
+assert(data.checklistLibrary[0].nodes[0].items[0].text==='修改第一項'&&data.checklistLibrary[0].nodes[0].items[1].text==='冷熱水出水位置、高度確認','edit affects selected item only');
+checklistQuickOpen(0);submit('給排水配管完成');checklistHome();checklistMove(0,1,-1,-1);
+assert(main.querySelector('.checklist-node-heading b').textContent==='① 給排水配管完成','number follows order');
+assert(!main.querySelector('.card'),'library has no large cards');
+const menu=main.querySelector('.checklist-menu');assert(!menu.open,'actions collapsed by default');menu.querySelector('summary').click();assert(menu.open&&menu.querySelectorAll('button').length===4,'ellipsis exposes four actions');
+checklistTargetOpen(0,1,main.querySelector('[data-checklist-node="1"] .checklist-binding button'));
+const select=main.querySelector('select');assert(select.options.length===2,'existing ID choices deduplicated');select.value='0';select.dispatchEvent(new Event('change'));
+assert(data.checklistLibrary[0].nodes[1].target.nodeId==='pipe','selection stores engineering ID');
+main.innerHTML=checklistProgressButton(1,'workflow',0,data.projects[0].workflow.nodes[0])+checklistProgressButton(2,'workflow',0,data.projects[1].workflow.nodes[0]);
+const details=main.querySelector('details');details.open=true;details.querySelector('input').click();
+assert(details.querySelector('summary').textContent==='Checklist 1/2'&&!data.projects[1].workflow.nodes[0].checklist[0].done,'inline project progress and isolation');
+data.checklistLibrary[0].nodes[1].items.push({id:'new-item',text:'管路固定確認'});checklistAutoBind(1,'workflow',0);
+assert(data.projects[0].workflow.nodes[0].checklist.length===3&&data.projects[0].workflow.nodes[0].checklist[0].done,'new template items append without resetting checks');
+checklistHome();assert(document.documentElement.scrollWidth<=innerWidth,'mobile width has no horizontal overflow');
+document.title='PASS';
+}catch(error){document.title='FAIL';results.push(error.stack);}
+document.getElementById('results').textContent=results.join('\n');
+</script></html>

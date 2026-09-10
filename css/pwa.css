@@ -1,0 +1,21 @@
+/* Zero safe-area insets preserve the existing desktop layout. */
+body {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.app { padding-bottom: calc(85px + env(safe-area-inset-bottom, 0px)); }
+nav {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.modal {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.sheet { padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
+@media (display-mode: standalone) {
+  .app { min-height: calc(100dvh - env(safe-area-inset-top, 0px)); }
+}

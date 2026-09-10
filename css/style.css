@@ -67,6 +67,22 @@
 .daily-text{white-space:pre-wrap;line-height:1.7}.daily-save{padding:10px 0 20px}
 .daily-reports [hidden]{display:none!important}
 
+/* 施工流程：沿用現有白底、黑白灰卡片，僅用垂直順序呈現。 */
+.workflow-list{display:grid;gap:10px}
+.workflow-node{display:flex;align-items:flex-start;gap:10px;margin:0}
+.workflow-number{width:26px;height:26px;flex:none;border-radius:8px;background:#eee;display:grid;place-items:center;font-size:12px;font-weight:800}
+.workflow-node-open{flex:1;min-width:0;padding:0;background:transparent;color:#171717;text-align:left;font-weight:400}
+.workflow-node-open b{display:block;margin-bottom:5px}.workflow-node-open .muted{margin-top:3px}
+.workflow-blocked{background:#fafafa}.workflow-summary .row{padding:9px 0}
+.workflow-editor{min-width:0}.workflow-editor input,.workflow-editor textarea,.workflow-editor select{font-size:16px}
+.workflow-editor button{min-height:40px;touch-action:manipulation}
+.workflow-check{display:flex;align-items:center;gap:9px;min-height:42px;cursor:pointer}
+.workflow-check input[type=checkbox]{width:22px;height:22px;margin:0;accent-color:#222;flex:none}
+.workflow-dependencies{border:1px solid #eee;border-radius:10px;padding:5px 12px;margin:5px 0 13px;max-height:180px;overflow:auto}
+.workflow-check-row{display:flex;align-items:center;gap:6px;border-bottom:1px solid #eee;padding:9px 0;flex-wrap:wrap}
+.workflow-check-row:last-child{border-bottom:0}.workflow-check-row>span,.workflow-check-row>label{flex:1;min-width:150px}
+@media(max-width:390px){.workflow-node{flex-wrap:wrap}.workflow-node .tag{margin-left:36px}.workflow-check-row button{padding:7px 8px}}
+
 /* 僅工程詳細頁新增的每日現場紀錄與正式日報。 */
 .project-site{min-width:0;overflow-wrap:anywhere}
 .project-site button,.project-site summary{min-height:44px;touch-action:manipulation;cursor:pointer}
@@ -96,3 +112,42 @@
 .site-report-photos figcaption{font-size:12px;white-space:pre-wrap}
 .site-report-preview footer{font-size:11px;color:#777;border-top:1px solid #ddd;margin-top:20px;padding-top:8px}
 @media(max-width:360px){.site-photos{grid-template-columns:1fr}.site-report-preview{padding:10px}.site-report-preview th,.site-report-preview td{padding:4px}}
+.library-note-filters{display:flex;align-items:center;flex-wrap:wrap;gap:3px;margin:0 0 10px;color:#ccc}
+.library-note-filters button.light{padding:4px 6px;background:transparent;color:#777;font-size:12px;border-radius:4px}
+.library-note-filters button[aria-pressed="true"]{background:#eee;color:#333;font-weight:600}
+.library-note-text{flex:1;min-width:0;overflow-wrap:anywhere}
+.library-note-category{display:inline-block;margin-right:8px;padding:2px 5px;border-radius:4px;background:#f1f1ef;color:#777;font-size:11px;line-height:1.4;vertical-align:middle;white-space:nowrap}
+
+.checklist-tabs{display:flex;align-items:center;gap:6px;margin-bottom:14px;color:#888}
+.checklist-tabs button[aria-pressed="true"]{background:#222;color:#fff}
+.checklist-controls{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+.checklist-controls button{font-size:12px;padding:6px 8px}
+.checklist-template-item{flex-wrap:wrap}.checklist-template-item>span{flex:1;min-width:120px;overflow-wrap:anywhere}
+.checklist-trade-open.light{width:100%;text-align:left;background:transparent;color:#222;padding:0}
+.checklist-progress.light{font-size:12px;padding:5px 8px;margin-top:5px;white-space:nowrap}
+.workflow-node:has(>.checklist-progress){flex-wrap:wrap}
+.checklist-template-node summary{overflow-wrap:anywhere}
+.checklist-template-node{border-top:1px solid #eee;padding:10px 0;margin-top:8px}
+.checklist-quick{border-top:1px solid #eee;margin-top:10px;padding-top:10px}
+.checklist-quick input,.checklist-quick select{font-size:16px;min-width:0}
+.checklist-quick-row{display:flex;align-items:center;gap:4px}
+.checklist-quick-row input{flex:1;width:0;margin:4px 0}
+.checklist-quick-row button{padding:8px;flex:none}
+.checklist-project{font-size:12px;margin-top:6px;min-width:0}
+.checklist-project summary{cursor:pointer;color:#666;padding:5px 0}
+.checklist-project .workflow-check{font-size:14px;overflow-wrap:anywhere}
+.workflow-node:has(>.checklist-project){flex-wrap:wrap}
+.workflow-node>.checklist-project{flex-basis:100%;order:2;margin-left:36px}
+
+/* Compact Checklist library only. */
+.checklist-trade{margin:22px 0}.checklist-trade h3{font-size:16px;margin-bottom:8px}
+.checklist-template-node{border-top:1px solid #d8d8d5;margin:0;padding:10px 0}
+.checklist-node-heading,.checklist-template-item{display:flex;align-items:center;gap:8px}
+.checklist-node-heading>b,.checklist-template-item>span{flex:1;min-width:0;overflow-wrap:anywhere}
+.checklist-template-item{padding:3px 0;font-size:14px;flex-wrap:nowrap}
+.checklist-trade .light{background:transparent;padding:8px 4px}
+.checklist-binding{margin:2px 0 4px}.checklist-binding button{font-weight:400;text-decoration:underline}
+.checklist-menu{position:relative;flex:none}.checklist-menu>summary{list-style:none;cursor:pointer;padding:6px 10px;font-size:20px;line-height:24px}.checklist-menu>summary::-webkit-details-marker{display:none}
+.checklist-menu[open]>div{position:absolute;right:0;top:100%;z-index:3;width:100px;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 3px 12px #0001;padding:4px}
+.checklist-menu button{display:block;width:100%;background:transparent;color:#222;padding:10px}.checklist-menu button:disabled{opacity:.3}
+.checklist-inline{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.checklist-inline input{flex:1;min-width:0;width:0;font-size:16px;margin:4px 0}.checklist-inline small{flex-basis:100%;color:#555}

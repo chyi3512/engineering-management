@@ -4,8 +4,23 @@ function library(e){
   main.innerHTML='<div class="section"><div><b>工種庫</b><div class="muted">施工知識母庫：展開工種查看注意事項與施工項目。</div></div><button onclick="newLibraryTrade()">＋ 新增工種</button></div>'+groups.map(t=>{
     const index=t.source==='2022'?t.ti:t.customIndex,key=t.source+':'+index;
     const source=t.source,trade=source==='2022'?data.trades[index]:libData[index];
-    return '<details class="card library-trade-card" '+(libraryExpanded.has(key)?'open':'')+' ontoggle="rememberLibraryExpanded(\''+key+'\',this.open)"><summary><span class="tag">'+(source==='2022'?'2022 工程範例':'工種庫新增')+'</span><b class="library-home-trade-title" style="display:inline-block">'+esc(t.name)+'</b></summary><div class="section"><b>注意事項</b><button class="light" onclick="addLibraryTradeNote(\''+source+'\','+index+',true)">＋ 新增注意事項</button></div>'+(trade.notes||[]).map((n,k)=>'<div class="row"><div style="flex:1">'+esc(n)+'</div><button class="orderbtn" onclick="editLibraryTradeNote(\''+source+'\','+index+','+k+',true)">編輯</button><button class="light" onclick="removeLibraryTradeNote(\''+source+'\','+index+','+k+',true)">刪除</button></div>').join('')+'<div class="library-child-summary">'+t.items.map((it,j)=>'<span><b>'+(j+1)+'</b> '+esc(it[0])+'</span>').join('')+'</div><button class="light library-enter" onclick="openLibraryTrade(\''+source+'\','+index+')">查看施工項目與照片 →</button>'+(source==='custom'?' <button class="light" onclick="editLibraryTrade('+index+')">編輯工種</button>':'')+'</details>';
+    return '<details class="card library-trade-card" '+(libraryExpanded.has(key)?'open':'')+' ontoggle="rememberLibraryExpanded(\''+key+'\',this.open)"><summary><span class="tag">'+(source==='2022'?'2022 工程範例':'工種庫新增')+'</span><b class="library-home-trade-title" style="display:inline-block">'+esc(t.name)+'</b></summary><div class="section"><b>注意事項</b><button class="light" onclick="addLibraryTradeNote(\''+source+'\','+index+',true)">＋ 新增注意事項</button></div>'+libraryOuterTradeNotesHTML(trade,source,index)+'<div class="library-child-summary">'+t.items.map((it,j)=>'<span><b>'+(j+1)+'</b> '+esc(it[0])+'</span>').join('')+'</div><button class="light library-enter" onclick="openLibraryTrade(\''+source+'\','+index+')">查看施工項目與照片 →</button>'+(source==='custom'?' <button class="light" onclick="editLibraryTrade('+index+')">編輯工種</button>':'')+'</details>';
   }).join('');
+}
+const libraryOuterNoteFilters={};
+function libraryOuterTradeNotesHTML(trade,source,index){
+  const filter=libraryOuterNoteFilters[source+':'+index]||'全部';
+  const notes=(trade.notes||[]).map((text,i)=>({text,i,category:trade.noteCategories?.[i]||'未分類'})).filter(note=>filter==='全部'||note.category===filter);
+  return `<div class="library-note-filters" role="group" aria-label="注意事項分類">${LIBRARY_NOTE_CATEGORIES.map(category=>`<button type="button" class="light" aria-pressed="${category===filter}" onclick="filterLibraryOuterNotes(this,'${source}',${index},'${category}')">${esc(category)}</button>`).join('<span aria-hidden="true">｜</span>')}</div><div class="library-note-rows">${notes.length?notes.map(note=>`<div class="row"><div class="library-note-text"><span class="library-note-category">${esc(note.category)}</span>${esc(note.text)}</div><button class="orderbtn" onclick="editLibraryTradeNote('${source}',${index},${note.i},true)">編輯</button><button class="light" onclick="removeLibraryTradeNote('${source}',${index},${note.i},true)">刪除</button></div>`).join(''):'<div class="empty">此分類尚無注意事項</div>'}</div>`;
+}
+function filterLibraryOuterNotes(button,source,index,category){
+  libraryOuterNoteFilters[source+':'+index]=category;
+  const trade=source==='2022'?data.trades[index]:libData[index];
+  const filters=button.closest('.library-note-filters'),rows=filters.nextElementSibling;
+  const content=document.createElement('div');
+  content.innerHTML=libraryOuterTradeNotesHTML(trade,source,index);
+  filters.replaceWith(content.firstElementChild);
+  rows.replaceWith(content.firstElementChild);
 }
 function rememberLibraryExpanded(key,open){if(open)libraryExpanded.add(key);else libraryExpanded.delete(key);}
 function openLibraryTrade(source,index){const t=source==='2022'?data.trades[index]:libData[index];if(t)libraryTradeDetail(t.name,source,index,index);}
@@ -18,8 +33,9 @@ function libraryTradeDetail(tradeName,source,ti,customIndex){
   const items=t.items||[], index=source==='2022'?ti:customIndex;
   main.innerHTML=`<button class="back" onclick="library()">← 返回工種庫</button>
     <div class="card"><span class="tag">${source==='2022'?'2022 工程範例':'工種庫新增'}</span><h2 class="library-trade-title">${esc(t.name)}</h2><div class="muted">工種｜${items.length} 個施工項目</div></div>
+    ${workflowTemplateSummary(t,source,index)}
     <div class="section"><b>工種注意事項</b><button class="light" onclick="addLibraryTradeNote('${esc(source)}',${index})">＋ 新增</button></div>
-    <div class="card">${notes.length?notes.map((n,i)=>`<div class="row"><div style="flex:1">□ ${esc(n)}</div><button class="orderbtn" onclick="editLibraryTradeNote('${esc(source)}',${index},${i})">編輯</button><span class="danger" onclick="removeLibraryTradeNote('${esc(source)}',${index},${i})">×</span></div>`).join(''):'<div class="empty">尚未設定工種注意事項</div>'}</div>
+    <div class="card">${libraryTradeNotesHTML(t,source,index)}</div>
     <div class="section"><b>照片參考</b><button class="light" onclick="addLibraryTradePhoto('${esc(source)}',${index})">＋ 新增照片</button></div>
     <div class="card library-photo-card">${libraryTradePhotosHTML(source,index,t)}</div>
     <div class="section"><b>施工項目</b><span class="muted">次項目</span></div>

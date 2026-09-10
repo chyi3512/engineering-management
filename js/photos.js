@@ -203,15 +203,24 @@ function removeLibraryTradePhoto(source,index,i){
   cloudPhotoDeleteIfNeeded(p,finish);
 }
 
+const LIBRARY_NOTE_CATEGORIES=['全部','施工前','設計尺寸','施工中','驗收','經驗'];
+let libraryNoteFilters={};
+function libraryTradeNoteCategory(t,index){return t.noteCategories?.[index]||'施工前';}
+function libraryTradeNotesHTML(t,source,index){
+  const key=source+':'+index,filter=libraryNoteFilters[key]||'全部';
+  const notes=(t.notes||[]).map((text,i)=>({text,i,category:libraryTradeNoteCategory(t,i)})).filter(note=>filter==='全部'||note.category===filter);
+  return '<div class="section" style="margin-top:0"><div style="display:flex;gap:6px;flex-wrap:wrap">'+LIBRARY_NOTE_CATEGORIES.map(category=>'<button class="light" style="padding:5px 8px" onclick="setLibraryTradeNoteFilter(\''+source+'\','+index+',\''+category+'\')">'+esc(category)+'</button>').join('')+'</div></div>'+(notes.length?notes.map(note=>'<div class="row"><span class="tag">'+esc(note.category)+'</span><div style="flex:1">□ '+esc(note.text)+'</div><button class="orderbtn" onclick="editLibraryTradeNote(\''+source+'\','+index+','+note.i+')">編輯</button><span class="danger" onclick="removeLibraryTradeNote(\''+source+'\','+index+','+note.i+')">×</span></div>').join(''):'<div class="empty">此分類尚無注意事項</div>');
+}
+function setLibraryTradeNoteFilter(source,index,category){libraryNoteFilters[source+':'+index]=category;openLibraryTrade(source,index);}
 function addLibraryTradeNote(source,index,inline){editLibraryTradeNote(source,index,-1,inline);}
 function editLibraryTradeNote(source,index,k,inline){
   const t=source==='2022'?data.trades[index]:libData[index];if(!t)return;
-  openModal('<h2>'+esc(t.name)+'｜注意事項</h2><label for="tradeNoteText">注意事項</label><textarea id="tradeNoteText">'+esc(k<0?'':t.notes?.[k]||'')+'</textarea><div class="actions"><button type="button" class="light" onclick="closeModal()">取消</button><button type="button" onclick="saveLibraryTradeNote(\''+source+'\','+index+','+k+','+!!inline+')">儲存</button></div>');
+  openModal('<h2>'+esc(t.name)+'｜注意事項</h2><label for="tradeNoteText">注意事項</label><textarea id="tradeNoteText">'+esc(k<0?'':t.notes?.[k]||'')+'</textarea><label>分類<select id="tradeNoteCategory">'+LIBRARY_NOTE_CATEGORIES.filter(category=>category!=='全部').map(category=>'<option '+(category===libraryTradeNoteCategory(t,k)?'selected':'')+'>'+category+'</option>').join('')+'</select></label><div class="actions"><button type="button" class="light" onclick="closeModal()">取消</button><button type="button" onclick="saveLibraryTradeNote(\''+source+'\','+index+','+k+','+!!inline+')">儲存</button></div>');
 }
 function saveLibraryTradeNote(source,index,k,inline){
   const t=source==='2022'?data.trades[index]:libData[index],text=document.getElementById('tradeNoteText').value.trim();if(!t||!text)return;
   if(!Array.isArray(t.notes))t.notes=[];
-  if(k<0)t.notes.push(text);else t.notes[k]=text;
+  if(!Array.isArray(t.noteCategories))t.noteCategories=[];if(k<0){t.notes.push(text);t.noteCategories.push(document.getElementById('tradeNoteCategory').value);}else{t.notes[k]=text;t.noteCategories[k]=document.getElementById('tradeNoteCategory').value;}
   source==='2022'?save():saveLib();closeModal();
   if(inline){libraryExpanded.add(source+':'+index);library();}else openLibraryTrade(source,index);
 }
@@ -221,7 +230,7 @@ function removeLibraryTradeNote(source,index,k,inline){
 }
 function deleteLibraryTradeNote(source,index,k,inline){
   const t=source==='2022'?data.trades[index]:libData[index];if(!Array.isArray(t?.notes))return;
-  t.notes.splice(k,1);source==='2022'?save():saveLib();closeModal();
+  t.notes.splice(k,1);if(Array.isArray(t.noteCategories))t.noteCategories.splice(k,1);source==='2022'?save():saveLib();closeModal();
   if(inline){libraryExpanded.add(source+':'+index);library();}else openLibraryTrade(source,index);
 }
 
