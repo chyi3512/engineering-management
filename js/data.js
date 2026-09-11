@@ -5,12 +5,16 @@ const SAFE_STORAGE = (() => {
     const s = window.localStorage;
     const test = '__eng_storage_test__';
     s.setItem(test, '1'); s.removeItem(test);
-    return s;
+    return {
+      getItem:k=>s.getItem(k),
+      setItem(k,v){const changed=s.getItem(k)!==String(v);s.setItem(k,v);if(changed&&typeof window.buildFlowCloudChanged==='function')window.buildFlowCloudChanged(k);},
+      removeItem:k=>s.removeItem(k)
+    };
   } catch (e) {
     const mem = Object.create(null);
     return {
       getItem: k => Object.prototype.hasOwnProperty.call(mem, k) ? mem[k] : null,
-      setItem: (k,v) => { mem[k] = String(v); },
+      setItem: (k,v) => { const changed=mem[k]!==String(v);mem[k] = String(v);if(changed&&typeof window.buildFlowCloudChanged==='function')window.buildFlowCloudChanged(k); },
       removeItem: k => { delete mem[k]; }
     };
   }

@@ -1,0 +1,11 @@
+{
+  "name": "buildflow-engineering-management",
+  "private": true,
+  "version": "1.0.0",
+  "engines": { "node": ">=22.9.0" },
+  "scripts": {
+    "dev": "node scripts/dev-server.cjs",
+    "build": "node scripts/build.cjs",
+    "test": "node tests/cloud-config-test.cjs && node tests/cloud-sync-test.cjs && node tests/checklists-test.cjs && node tests/pwa-sw-test.cjs"
+  }
+}

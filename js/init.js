@@ -25,8 +25,10 @@ document.addEventListener('click',function(e){
 },true);
 
 
-loadProjectDataFile().then(function(){
-  recoverPhotos();
+// Render the existing local home immediately, even while cloud requests time out.
+home(document.querySelector('nav button'));
+Promise.resolve(typeof window.buildFlowCloud==='undefined'?null:window.buildFlowCloud.initialize()).then(async function(){
+  if(!window.buildFlowCloud?.authoritative){await loadProjectDataFile();recoverPhotos();}
   initializeProjectSchedules();
   home(document.querySelector('nav button'));
 });

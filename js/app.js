@@ -27,7 +27,7 @@ if(!Array.isArray(libData))libData=[];
 async function backupData(){
   let dailyReportPhotos;
   try{dailyReportPhotos=typeof collectDailyReportPhotoBackup==='function'?await collectDailyReportPhotoBackup():[];}catch(error){alert('備份未完成：'+error.message);return;}
-  const payload={version:'construction_backup_v2',exportedAt:new Date().toISOString(),construction:data,quotes:quoteData,library:libData,dailyReportPhotos};
+  const payload={version:'construction_backup_v2',exportedAt:new Date().toISOString(),construction:data,quotes:quoteData,library:libData,dailyReportPhotos,...(typeof equipmentQuoteData!=='undefined'?{equipmentQuotes:equipmentQuoteData}:{})};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='工程管理_備份_'+new Date().toISOString().slice(0,10)+'.json';a.click();
@@ -41,6 +41,7 @@ function restoreData(){
       if(x.construction){localStorage.setItem(KEY,JSON.stringify(x.construction));data=x.construction}
       if(Array.isArray(x.library)){localStorage.setItem(LIBKEY,JSON.stringify(x.library));libData=x.library}
       if(x.quotes){localStorage.setItem(QUOTE_KEY,JSON.stringify(x.quotes));quoteData=x.quotes}
+      if(x.equipmentQuotes&&typeof equipmentQuoteData!=='undefined'){localStorage.setItem(EQUIPMENT_QUOTE_KEY,JSON.stringify(x.equipmentQuotes));equipmentQuoteData=x.equipmentQuotes}
       alert('資料已還原，頁面即將重新整理。');location.reload();
     }catch(e){alert('備份檔格式錯誤，原資料沒有變動。')}};
     r.readAsText(f);
