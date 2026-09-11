@@ -16,6 +16,7 @@
   }
   function persistMeta(){localStorage.setItem(META,JSON.stringify(meta));}
   function say(message){status=message;const el=document.getElementById('buildflowCloudStatus');if(el)el.textContent=message;}
+  function setSyncButtonBusy(value){const button=document.getElementById('buildflowCloudSync');if(button)button.disabled=!!value;}
   function fail(error){say('同步失敗：'+(error.message||'網路無法連線')+'；本機資料保留');}
   function validate(p){
     if(p?.version!==1||!p.construction||!Array.isArray(p.construction.projects)||!Array.isArray(p.construction.trades)||!Array.isArray(p.construction.issues)||!Array.isArray(p.library)||!Array.isArray(p.quotes?.items)||!Array.isArray(p.quotes?.vendors)||!Array.isArray(p.equipmentQuotes?.items)||!Array.isArray(p.equipmentQuotes?.vendors))throw Error('雲端資料格式不完整，未覆蓋本機');
@@ -103,7 +104,7 @@
   function canReplace(){return !(typeof dailyReportEditor!=='undefined'&&dailyReportEditor?.dirty)&&!(typeof projectSitePending!=='undefined'&&projectSitePending)&&!document.getElementById('projectBasicName')&&!document.getElementById('projectReferenceTitle')&&document.getElementById('modal')?.style.display!=='flex'&&!document.activeElement?.matches('input,textarea,select');}
   async function sync(download=false){
     if(busy||paused)return false;
-    busy=true;clearTimeout(timer);let succeeded=false;
+    busy=true;setSyncButtonBusy(true);clearTimeout(timer);let succeeded=false;
     const start=generation;
     try{
       await settings();if(!session){say('本機模式 · 尚未登入');return false;}
@@ -149,7 +150,7 @@
       }
       succeeded=true;say(meta.dirty?'本機已儲存 · 等待同步':'已同步 · '+new Date().toLocaleTimeString());return true;
     }catch(error){fail(error);return false;}finally{
-      busy=false;
+      busy=false;setSyncButtonBusy(false);
       if(meta.dirty&&(succeeded||generation!==start))schedule();
     }
   }

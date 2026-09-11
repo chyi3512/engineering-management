@@ -48,6 +48,9 @@ async function check(expression,label){assert.equal(await evaluate(expression),t
   console.log('PASS real login UI, four-key save hooks and first upload');
   await check("localStorage.getItem('construction_v2').includes('電腦工程')",'existing local cache retained');
   offline=true;await evaluate("data.projects[0].name='離線編輯';save();");await until("document.getElementById('buildflowCloudStatus').textContent.includes('同步失敗')");
+  await check("document.getElementById('buildflowCloudSync').disabled===false",'sync button re-enables after a failed request');
+  offline=false;await evaluate("document.getElementById('buildflowCloudSync').click()");await until("document.getElementById('buildflowCloudStatus').textContent.startsWith('已同步')");assert.equal(row.payload.construction.projects[0].name,'離線編輯');console.log('PASS retry button starts a new sync after failure');
+  offline=true;
   await navigate(base+'/');await until("document.getElementById('buildflowCloudStatus').textContent.includes('同步失敗')");await check("data.projects[0].name==='離線編輯'&&main.textContent.includes('離線編輯')",'offline restart renders local home without blank screen');
   offline=false;await evaluate('buildFlowCloud.sync()');assert.equal(row.payload.construction.projects[0].name,'離線編輯');
   await evaluate("document.getElementById('buildflowCloudAccount').click();document.getElementById('bfSignOut').click()");
