@@ -76,7 +76,30 @@ function projectOverviewHTML(project){
   const confirmation=nextSiteConfirmation(project),nodes=typeof workflowProjectNodes==='function'?workflowProjectNodes(project):[],checks=nodes.reduce((sum,node)=>sum+(node.checklist||[]).length,0),doneChecks=nodes.reduce((sum,node)=>sum+(node.checklist||[]).filter(item=>item.done).length,0);
   return '<div class="card buildflow-overview-stats"><div><span class="muted">工期</span><b>'+esc(projectSchedulePeriodLabel(project))+'</b></div><div><span class="muted">總進度</span><b>'+projectTotalScheduleProgress(project)+'%</b></div></div><div class="section"><b>施工時間軸</b></div><div class="card">'+projectGanttHTML(project,true)+'</div>'+projectSummaryItems('現在施工',projectCurrentSteps(project),project)+projectSummaryItems('接下來施工',projectUpcomingSteps(project),project)+'<div class="section"><b>下次現場確認</b></div><div class="card">'+((confirmation.checks||[]).length?confirmation.checks.map(item=>'<div class="row">'+(item.done?'☑':'☐')+'　'+esc(item.text)+'</div>').join(''):'<div class="muted">尚無確認事項</div>')+'</div><div class="section"><b>施工檢查摘要</b></div><div class="card"><b>'+doneChecks+'/'+checks+' 項已完成</b><div class="muted">既有 Workflow／Checklist 摘要</div></div><div class="section"><b>本週紀錄／日報</b></div><div class="card"><div class="muted">已有 '+(project.siteReports||[]).length+' 份現場日報</div></div>';
 }
-function projectScheduleTableHTML(project){return '<div class="section"><b>工程表</b><button onclick="addProjectStep('+project.id+')">＋ 自訂工項</button></div><div class="card buildflow-schedule-table">'+((project.steps||[]).map((step,index)=>'<button class="buildflow-schedule-row" onclick="stepDetail('+project.id+','+index+')"><b>'+esc(step.trade||'未分類')+'｜'+esc(step.name)+'</b><span>'+esc(fmtDate(step.start||''))+' ～ '+esc(fmtDate(step.end||step.start||''))+'</span><span>進度 '+projectStepProgress(step)+'%</span><small>前置工程：'+esc(projectPreviousStepNames(project,index))+'</small></button>').join('')||'<div class="empty">目前沒有工項。</div>')+'</div><div class="section"><b>Gantt</b><span class="muted">依工程表日期即時重算</span></div><div class="card">'+projectGanttHTML(project)+'</div>';}
+function projectScheduleTrades(project){return [...new Set((project.steps||[]).map(step=>step.trade||'未分類'))];}
+function updateProjectScheduleDate(id,index,field,value,input){
+  const project=data.projects.find(item=>item.id===id),step=project?.steps?.[index];if(!step||!['start','end'].includes(field))return;
+  if(input?.validity?.badInput||(value&&!isCompleteScheduleDate(value)))return;
+  const start=field==='start'?value:(step.start||''),end=field==='end'?value:(step.end||'');
+  if(!scheduleDateRangeValid(start,end)){alert('結束日期不能早於開始日期');openProject(id,'schedule');return;}
+  step[field]=value;save();openProject(id,'schedule');
+}
+function updateProjectScheduleDone(id,index,checked){const step=data.projects.find(item=>item.id===id)?.steps?.[index];if(!step)return;step.done=!!checked;if(step.done&&!step.actualCompletedAt)step.actualCompletedAt=new Date().toISOString();save();openProject(id,'schedule');}
+function addProjectScheduleItem(id,trade){
+  openModal('<h2>新增工程項目</h2><label>工種<input id="projectScheduleTrade" value="'+esc(trade)+'"></label><label>工程名稱<input id="projectScheduleName" required></label><div class="grid"><label>開始日期<input id="projectScheduleStart" type="date"></label><label>結束日期<input id="projectScheduleEnd" type="date"></label></div><div class="actions"><button class="light" onclick="closeModal()">取消</button><button onclick="saveProjectScheduleItem('+id+')">新增</button></div>');
+}
+function saveProjectScheduleItem(id){
+  const project=data.projects.find(item=>item.id===id),name=document.getElementById('projectScheduleName')?.value.trim(),trade=document.getElementById('projectScheduleTrade')?.value.trim()||'未分類',start=document.getElementById('projectScheduleStart')?.value||'',end=document.getElementById('projectScheduleEnd')?.value||'';
+  if(!project||!name)return;if((start&&!isCompleteScheduleDate(start))||(end&&!isCompleteScheduleDate(end))||!scheduleDateRangeValid(start,end)){alert('請填入有效日期，且結束日期不可早於開始日期。');return;}
+  project.steps.push({name,trade,start,end,next:'',notes:[],done:false});save();closeModal();openProject(id,'schedule');
+}
+function projectScheduleTableHTML(project){
+  const trades=projectScheduleTrades(project),groups=trades.map((trade,tradeIndex)=>{
+    const rows=(project.steps||[]).map((step,index)=>({step,index})).filter(item=>(item.step.trade||'未分類')===trade).map(({step,index})=>'<tr><td><input type="date" value="'+esc(step.start||'')+'" onchange="updateProjectScheduleDate('+project.id+','+index+',\'start\',this.value,this)"></td><td><input type="date" value="'+esc(step.end||'')+'" onchange="updateProjectScheduleDate('+project.id+','+index+',\'end\',this.value,this)"></td><td><button class="buildflow-item-edit" onclick="stepDetail('+project.id+','+index+')">'+esc(step.name)+'</button></td><td><label class="buildflow-progress"><input type="checkbox" '+(step.done?'checked':'')+' onchange="updateProjectScheduleDone('+project.id+','+index+',this.checked)"> '+projectStepProgress(step)+'%</label></td><td>'+esc(projectPreviousStepNames(project,index))+'</td></tr>').join('')||'<tr><td colspan="5" class="muted">目前沒有工程項目</td></tr>';
+    return '<details class="card buildflow-trade-group" open><summary><b>'+esc(trade)+'</b><span class="tag">'+(project.steps||[]).filter(step=>(step.trade||'未分類')===trade).length+' 項</span></summary><div class="buildflow-schedule-scroll"><table><thead><tr><th>開始日期</th><th>結束日期</th><th>工程名稱</th><th>進度</th><th>前置工程</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="buildflow-trade-actions"><button class="light" onclick="addProjectScheduleItem('+project.id+',\''+esc(trade)+'\')">＋ 新增工程項目</button></div></details>';
+  }).join('');
+  return '<div class="section"><b>施工時間圖 / Gantt</b><span class="muted">讀取下方工程進度表日期</span></div><div class="card">'+projectGanttHTML(project)+'</div><div class="section"><b>工程進度表</b><span class="muted">依工種分組；日期直接編輯</span></div>'+(groups||'<div class="empty">目前沒有工程項目。</div>');
+}
 function openProject(id,tab='overview'){
   const p=data.projects.find(x=>x.id===id);if(!p)return;
   releaseDailyPhotoViews();
