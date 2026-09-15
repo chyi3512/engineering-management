@@ -44,11 +44,46 @@ function openProjectView(id,view){
   openProject(id);
 }
 
-function openProject(id){
+/* BuildFlow Phase 1：所有施工時間均從 project.steps 的 start / end 取得。 */
+function projectDatedSteps(project){return (project.steps||[]).filter(step=>isCompleteScheduleDate(step.start)&&isCompleteScheduleDate(step.end)&&step.end>=step.start);}
+function projectSchedulePeriod(project){
+  const steps=projectDatedSteps(project);if(!steps.length)return null;
+  return {start:steps.reduce((value,step)=>step.start<value?step.start:value,steps[0].start),end:steps.reduce((value,step)=>step.end>value?step.end:value,steps[0].end)};
+}
+function projectSchedulePeriodLabel(project){const period=projectSchedulePeriod(project);return period?fmtDate(period.start)+' → '+fmtDate(period.end)+'｜'+scheduleDays(period.start,period.end)+'天':'工期未設定';}
+function projectStepProgress(step){const value=Number(step.progress);return Number.isFinite(value)?Math.max(0,Math.min(100,Math.round(value))):(step.done?100:0);}
+function projectTotalScheduleProgress(project){const steps=project.steps||[];return steps.length?Math.round(steps.reduce((sum,step)=>sum+projectStepProgress(step),0)/steps.length):0;}
+function projectPreviousStepNames(project,index){const step=(project.steps||[])[index];if(!step)return '無';const names=(project.steps||[]).filter(item=>item.next===step.name).map(item=>item.name);return names.length?names.join('、'):'無';}
+function projectTodayISO(){return localDateISO(new Date());}
+function projectCurrentSteps(project,today=projectTodayISO()){return projectDatedSteps(project).filter(step=>step.start<=today&&step.end>=today);}
+function projectUpcomingSteps(project,today=projectTodayISO()){
+  const future=projectDatedSteps(project).filter(step=>step.start>today).sort((a,b)=>a.start.localeCompare(b.start));
+  if(!future.length)return [];const start=future[0].start;return future.filter(step=>step.start===start);
+}
+function projectGanttHTML(project,compact=false){
+  const steps=projectDatedSteps(project);const period=projectSchedulePeriod(project);
+  if(!period)return '<div class="empty">工期未設定。請在工程表填入完整的開始與結束日期。</div>';
+  const days=scheduleDays(period.start,period.end),dayWidth=compact?14:24,dates=[];
+  for(let date=dateObj(period.start);date<=dateObj(period.end);date.setDate(date.getDate()+1))dates.push(new Date(date));
+  const width=Math.max(280,days*dayWidth),headers=dates.map((date,index)=>'<div class="buildflow-gantt-day">'+((index===0||date.getDate()===1||(!compact&&days<=31))?(date.getMonth()+1)+'/'+date.getDate():'')+'</div>').join('');
+  return '<div class="buildflow-gantt-scroll"><div class="buildflow-gantt" style="--gantt-days:'+days+';--gantt-width:'+width+'px"><div class="buildflow-gantt-head"><div>工程</div><div class="buildflow-gantt-axis">'+headers+'</div></div>'+steps.map((step,index)=>{
+    const offset=scheduleDays(period.start,step.start)-1,length=scheduleDays(step.start,step.end),sourceIndex=(project.steps||[]).indexOf(step);
+    return '<div class="buildflow-gantt-row"><button class="buildflow-gantt-name" onclick="stepDetail('+project.id+','+sourceIndex+')"><b>'+esc(step.trade||'未分類')+'｜'+esc(step.name)+'</b><small>'+esc(fmtDate(step.start))+' ～ '+esc(fmtDate(step.end))+'</small></button><div class="buildflow-gantt-track"><div class="buildflow-gantt-bar" title="'+esc(step.name)+' '+esc(step.start)+' ～ '+esc(step.end)+'" style="left:calc('+offset+' / var(--gantt-days) * 100%);width:calc('+length+' / var(--gantt-days) * 100%)">'+(compact?'':esc(step.name))+'</div></div></div>';
+  }).join('')+'</div></div>';
+}
+function projectSummaryItems(title,steps,project){return '<div class="section"><b>'+title+'</b></div><div class="card">'+(steps.length?steps.map(step=>'<div class="row"><div style="flex:1"><b>'+esc(step.trade||'未分類')+'｜'+esc(step.name)+'</b><div class="muted">'+esc(fmtDate(step.start))+' ～ '+esc(fmtDate(step.end))+'</div></div><span class="tag">'+projectStepProgress(step)+'%</span></div>').join(''):'<div class="muted">'+(title==='現在施工'?'目前沒有排定施工中的工程。':'沒有尚未開始的工程。')+'</div>')+'</div>';}
+function projectOverviewHTML(project){
+  const confirmation=nextSiteConfirmation(project),nodes=typeof workflowProjectNodes==='function'?workflowProjectNodes(project):[],checks=nodes.reduce((sum,node)=>sum+(node.checklist||[]).length,0),doneChecks=nodes.reduce((sum,node)=>sum+(node.checklist||[]).filter(item=>item.done).length,0);
+  return '<div class="card buildflow-overview-stats"><div><span class="muted">工期</span><b>'+esc(projectSchedulePeriodLabel(project))+'</b></div><div><span class="muted">總進度</span><b>'+projectTotalScheduleProgress(project)+'%</b></div></div><div class="section"><b>施工時間軸</b></div><div class="card">'+projectGanttHTML(project,true)+'</div>'+projectSummaryItems('現在施工',projectCurrentSteps(project),project)+projectSummaryItems('接下來施工',projectUpcomingSteps(project),project)+'<div class="section"><b>下次現場確認</b></div><div class="card">'+((confirmation.checks||[]).length?confirmation.checks.map(item=>'<div class="row">'+(item.done?'☑':'☐')+'　'+esc(item.text)+'</div>').join(''):'<div class="muted">尚無確認事項</div>')+'</div><div class="section"><b>施工檢查摘要</b></div><div class="card"><b>'+doneChecks+'/'+checks+' 項已完成</b><div class="muted">既有 Workflow／Checklist 摘要</div></div><div class="section"><b>本週紀錄／日報</b></div><div class="card"><div class="muted">已有 '+(project.siteReports||[]).length+' 份現場日報</div></div>';
+}
+function projectScheduleTableHTML(project){return '<div class="section"><b>工程表</b><button onclick="addProjectStep('+project.id+')">＋ 自訂工項</button></div><div class="card buildflow-schedule-table">'+((project.steps||[]).map((step,index)=>'<button class="buildflow-schedule-row" onclick="stepDetail('+project.id+','+index+')"><b>'+esc(step.trade||'未分類')+'｜'+esc(step.name)+'</b><span>'+esc(fmtDate(step.start||''))+' ～ '+esc(fmtDate(step.end||step.start||''))+'</span><span>進度 '+projectStepProgress(step)+'%</span><small>前置工程：'+esc(projectPreviousStepNames(project,index))+'</small></button>').join('')||'<div class="empty">目前沒有工項。</div>')+'</div><div class="section"><b>Gantt</b><span class="muted">依工程表日期即時重算</span></div><div class="card">'+projectGanttHTML(project)+'</div>';}
+function openProject(id,tab='overview'){
   const p=data.projects.find(x=>x.id===id);if(!p)return;
   releaseDailyPhotoViews();
   let siteError='';try{ensureProjectSiteAppointments(p);}catch(error){siteError='到期事項尚未儲存：'+error.message;}
-  main.innerHTML='<button class="back" onclick="home()">← 返回</button><div class="card"><span class="tag">'+esc(p.status)+'</span><h2>'+esc(p.name)+'</h2><div class="muted">'+esc(p.client)+'</div><div style="margin:15px 0 7px" class="bar"><div class="fill" style="width:'+progress(p)+'%"></div></div><b>'+progress(p)+'%</b><div style="margin-top:12px"><button class="light" onclick="openProjectData('+id+')">專案資料</button></div></div>'+projectSiteTopHTML(p)+'<div class="section"><b>工程進度表</b></div><div class="grid"><button class="light" onclick="openProjectSchedule('+id+',\'main\')">主要工進表</button></div><div class="section"><b>工程檢視</b></div><div class="grid"><button onclick="openProjectView('+id+',\'time\')">◷ 時間／本週進度</button><button onclick="openProjectView('+id+',\'trade\')">☷ 依工種查看</button></div>'+workflowProjectHTML(p)+'<div class="section"><b>現場實際施工流程</b><div><button class="light" onclick="reorderProject('+id+')">編排</button> <button onclick="addProjectStep('+id+')">＋ 自訂工項</button></div></div><div class="card">'+p.steps.map((x,i)=>'<div class="row" onclick="stepDetail('+id+','+i+')"><div class="dot '+(x.done?'checked':'')+'">'+(x.done?'✓':'')+'</div><div style="flex:1"><b style="'+(x.done?'text-decoration:line-through;color:#999':'')+'">'+esc(x.name)+'</b><div class="muted">'+esc(x.trade)+'　'+(x.start?esc(fmtDate(x.start)+' ～ '+fmtDate(x.end||x.start)):'尚未排定')+'　→ '+esc(x.next||'未設定')+'</div>'+(typeof checklistProgressButton==='function'?checklistProgressButton(id,'step',i,x):'')+'</div></div>').join('')+'</div><div class="grid"><button onclick="newIssue('+id+')">⚠ 新增問題</button><button onclick="report('+id+')">📝 歷史日報</button></div>'+projectSiteBottomHTML(p);
+  const tabs=[['overview','概要'],['schedule','工程表'],['inspection','施工檢查'],['weekly','本週紀錄']];
+  const content=tab==='schedule'?projectScheduleTableHTML(p):tab==='inspection'?workflowProjectHTML(p):tab==='weekly'?projectSiteTopHTML(p)+projectSiteBottomHTML(p):projectOverviewHTML(p);
+  main.innerHTML='<button class="back" onclick="home()">← 返回</button><div class="card"><span class="tag">'+esc(p.status)+'</span><h2>'+esc(p.name)+'</h2><div class="muted">'+esc(p.client)+'　｜　'+esc(projectSchedulePeriodLabel(p))+'</div><div style="margin:15px 0 7px" class="bar"><div class="fill" style="width:'+projectTotalScheduleProgress(p)+'%"></div></div><b>'+projectTotalScheduleProgress(p)+'%</b><div style="margin-top:12px"><button class="light" onclick="openProjectData('+id+')">專案資料</button></div></div><div class="buildflow-tabs" role="tablist">'+tabs.map(item=>'<button role="tab" aria-selected="'+(tab===item[0])+'" onclick="openProject('+id+',\''+item[0]+'\')">'+item[1]+'</button>').join('')+'</div>'+content;
   bindProjectSite(p);if(siteError)projectSiteMessage(main,siteError);
 }
 function reorderProject(id){let p=data.projects.find(x=>x.id===id);openModal('<h2>編排施工順序</h2><div class="hint">由上到下就是施工順序。按 ↑ ↓ 調整，系統會同步更新「下一步」提示。</div>'+p.steps.map((s,i)=>'<div class="card" style="padding:12px"><b>'+esc(s.name)+'</b><div class="muted">'+esc(s.trade)+'</div><div style="margin-top:8px"><button class="orderbtn" onclick="moveProjectStep('+id+','+i+',-1)">↑ 上移</button> <button class="orderbtn" onclick="moveProjectStep('+id+','+i+',1)">↓ 下移</button></div></div>').join('')+'<button style="width:100%" onclick="closeModal();openProject('+id+')">完成編排</button>')}
