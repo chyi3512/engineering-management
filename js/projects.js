@@ -71,10 +71,55 @@ function projectGanttHTML(project,compact=false){
     return '<div class="buildflow-gantt-row"><button class="buildflow-gantt-name" onclick="stepDetail('+project.id+','+sourceIndex+')"><b>'+esc(step.trade||'未分類')+'｜'+esc(step.name)+'</b><small>'+esc(fmtDate(step.start))+' ～ '+esc(fmtDate(step.end))+'</small></button><div class="buildflow-gantt-track"><div class="buildflow-gantt-bar" title="'+esc(step.name)+' '+esc(step.start)+' ～ '+esc(step.end)+'" style="left:calc('+offset+' / var(--gantt-days) * 100%);width:calc('+length+' / var(--gantt-days) * 100%)">'+(compact?'':esc(step.name))+'</div></div></div>';
   }).join('')+'</div></div>';
 }
+/* SWD2601 概要專用施工時間圖：獨立於 steps，資料只掛在此專案的 scheduleItems。 */
+function isSWD2601Project(project){return /^SWD2601\s*陳宅$/i.test(String(project?.name||'').replace(/[｜|]/g,' ').replace(/\s+/g,' ').trim());}
+const SWD2601_SCHEDULE_EXAMPLES=[
+  ['泥作','防水','2026-09-09','2026-09-12'],['泥作','貼磚','2026-09-10','2026-09-11'],['泥作','填縫','2026-09-11','2026-09-12'],['木作','放樣','2026-09-09','2026-09-10'],['水電','配管','2026-09-10','2026-09-12'],['水電','試水','2026-09-13','2026-09-14'],['木地板','進料','2026-09-10','2026-09-11'],['木地板','施工(3D)','2026-09-12','2026-09-14']
+];
+function swdScheduleItemId(){return 'swd-schedule-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);}
+function swdScheduleItems(project){
+  if(!isSWD2601Project(project))return [];
+  if(!Array.isArray(project.scheduleItems)){
+    project.scheduleItems=SWD2601_SCHEDULE_EXAMPLES.map(([trade,name,start,end])=>({id:swdScheduleItemId(),projectId:project.id,trade,name,start,end}));
+    save();
+  }
+  let repaired=false;project.scheduleItems.forEach(item=>{if(item&&item.projectId===undefined){item.projectId=project.id;repaired=true;}});if(repaired)save();
+  return project.scheduleItems.filter(item=>item&&String(item.projectId)===String(project.id));
+}
+function swdScheduleTrades(project){return [...new Set([...SWD2601_SCHEDULE_EXAMPLES.map(item=>item[0]),...swdScheduleItems(project).map(item=>item.trade).filter(Boolean)])];}
+function swdScheduleModal(projectId,itemId=''){
+  const project=data.projects.find(item=>item.id===projectId);if(!isSWD2601Project(project))return;
+  const item=itemId?swdScheduleItems(project).find(entry=>entry.id===itemId):null,trades=swdScheduleTrades(project),isEdit=!!item;
+  openModal('<div class="swd-schedule-modal"><h2>'+ (isEdit?'編輯工程時間':'新增工程時間')+'</h2><label>工種<select id="swdScheduleTrade">'+trades.map(trade=>'<option value="'+esc(trade)+'" '+((item?.trade||trades[0])===trade?'selected':'')+'>'+esc(trade)+'</option>').join('')+'</select></label><label>工程名稱<input id="swdScheduleName" value="'+esc(item?.name||'')+'" required></label><div class="grid"><label>開始日期<input id="swdScheduleStart" type="date" value="'+esc(item?.start||'')+'" required></label><label>結束日期<input id="swdScheduleEnd" type="date" value="'+esc(item?.end||'')+'" required></label></div><div class="actions">'+(isEdit?'<button class="light danger" onclick="deleteSWDScheduleItem('+projectId+',\''+esc(itemId)+'\')">刪除</button>':'')+'<button class="light" onclick="closeModal()">取消</button><button onclick="saveSWDScheduleItem('+projectId+',\''+esc(itemId)+'\')">'+(isEdit?'儲存':'新增')+'</button></div></div>');
+}
+function saveSWDScheduleItem(projectId,itemId=''){
+  const project=data.projects.find(item=>item.id===projectId),trade=document.getElementById('swdScheduleTrade')?.value||'',name=document.getElementById('swdScheduleName')?.value.trim(),start=document.getElementById('swdScheduleStart')?.value||'',end=document.getElementById('swdScheduleEnd')?.value||'';
+  if(!isSWD2601Project(project)||!trade||!name||!isCompleteScheduleDate(start)||!isCompleteScheduleDate(end)||!scheduleDateRangeValid(start,end)){alert('請填寫完整工程名稱與有效開始／結束日期。');return;}
+  const items=swdScheduleItems(project),existing=itemId&&items.find(item=>item.id===itemId);
+  if(existing)Object.assign(existing,{projectId:project.id,trade,name,start,end});else items.push({id:swdScheduleItemId(),projectId:project.id,trade,name,start,end});
+  save();closeModal();openProject(projectId,'overview');
+}
+function deleteSWDScheduleItem(projectId,itemId){
+  const project=data.projects.find(item=>item.id===projectId);if(!isSWD2601Project(project))return;
+  const items=swdScheduleItems(project),index=items.findIndex(item=>item.id===itemId);if(index<0)return;
+  if(!confirm('刪除這一筆施工時間？'))return;items.splice(index,1);save();closeModal();openProject(projectId,'overview');
+}
+function swdScheduleGanttHTML(project){
+  const items=swdScheduleItems(project).filter(item=>isCompleteScheduleDate(item.start)&&isCompleteScheduleDate(item.end)&&item.end>=item.start);if(!items.length)return '<div class="empty">尚未建立施工時間。</div>';
+  const start=items.reduce((value,item)=>item.start<value?item.start:value,items[0].start),end=items.reduce((value,item)=>item.end>value?item.end:value,items[0].end),days=scheduleDays(start,end),dates=[];
+  for(let date=dateObj(start);date<=dateObj(end);date.setDate(date.getDate()+1))dates.push(new Date(date));
+  const groups=swdScheduleTrades(project).map(trade=>({trade,items:items.filter(item=>item.trade===trade)})).filter(group=>group.items.length).map(group=>{
+    const lanes=[];group.items.slice().sort((a,b)=>a.start.localeCompare(b.start)||a.end.localeCompare(b.end)).forEach(item=>{let lane=lanes.findIndex(lastEnd=>lastEnd<item.start);if(lane<0){lane=lanes.length;lanes.push(item.end);}else lanes[lane]=item.end;item._lane=lane;});return {...group,lanes:lanes.length};
+  });
+  const axis=dates.map((date,index)=>'<div class="swd-gantt-day">'+((days<=21||index===0||date.getDate()===1)?(date.getMonth()+1)+'/'+date.getDate():'')+'</div>').join('');
+  return '<div class="swd-gantt-scroll"><div class="swd-gantt" style="--swd-days:'+days+';--swd-width:'+Math.max(300,days*34)+'px"><div class="swd-gantt-head"><div class="swd-gantt-label">工種</div><div class="swd-gantt-axis">'+axis+'</div></div>'+groups.map(group=>'<div class="swd-gantt-row"><div class="swd-gantt-label"><b>'+esc(group.trade)+'</b></div><div class="swd-gantt-track" style="--swd-lanes:'+group.lanes+'">'+group.items.map(item=>{const offset=scheduleDays(start,item.start)-1,length=scheduleDays(item.start,item.end);return '<button class="swd-gantt-bar" title="'+esc(item.name)+'" onclick="swdScheduleModal('+project.id+',\''+esc(item.id)+'\')" style="--swd-lane:'+item._lane+';left:calc('+offset+' / var(--swd-days) * 100%);width:calc('+length+' / var(--swd-days) * 100%)">'+esc(item.name)+'</button>';}).join('')+'</div></div>').join('')+'</div></div>';
+}
+function swdScheduleOverviewHTML(project){return '<div class="section"><div><b>施工時間圖</b><div class="muted">可自行新增工程名稱與日期</div></div><button onclick="swdScheduleModal('+project.id+')">＋ 新增工程時間</button></div><div class="card">'+swdScheduleGanttHTML(project)+'</div>';}
 function projectSummaryItems(title,steps,project){return '<div class="section"><b>'+title+'</b></div><div class="card">'+(steps.length?steps.map(step=>'<div class="row"><div style="flex:1"><b>'+esc(step.trade||'未分類')+'｜'+esc(step.name)+'</b><div class="muted">'+esc(fmtDate(step.start))+' ～ '+esc(fmtDate(step.end))+'</div></div><span class="tag">'+projectStepProgress(step)+'%</span></div>').join(''):'<div class="muted">'+(title==='現在施工'?'目前沒有排定施工中的工程。':'沒有尚未開始的工程。')+'</div>')+'</div>';}
 function projectOverviewHTML(project){
   const confirmation=nextSiteConfirmation(project),nodes=typeof workflowProjectNodes==='function'?workflowProjectNodes(project):[],checks=nodes.reduce((sum,node)=>sum+(node.checklist||[]).length,0),doneChecks=nodes.reduce((sum,node)=>sum+(node.checklist||[]).filter(item=>item.done).length,0);
-  return '<div class="card buildflow-overview-stats"><div><span class="muted">工期</span><b>'+esc(projectSchedulePeriodLabel(project))+'</b></div><div><span class="muted">總進度</span><b>'+projectTotalScheduleProgress(project)+'%</b></div></div><div class="section"><b>施工時間軸</b></div><div class="card">'+projectGanttHTML(project,true)+'</div>'+projectSummaryItems('現在施工',projectCurrentSteps(project),project)+projectSummaryItems('接下來施工',projectUpcomingSteps(project),project)+'<div class="section"><b>下次現場確認</b></div><div class="card">'+((confirmation.checks||[]).length?confirmation.checks.map(item=>'<div class="row">'+(item.done?'☑':'☐')+'　'+esc(item.text)+'</div>').join(''):'<div class="muted">尚無確認事項</div>')+'</div><div class="section"><b>施工檢查摘要</b></div><div class="card"><b>'+doneChecks+'/'+checks+' 項已完成</b><div class="muted">既有 Workflow／Checklist 摘要</div></div><div class="section"><b>本週紀錄／日報</b></div><div class="card"><div class="muted">已有 '+(project.siteReports||[]).length+' 份現場日報</div></div>';
+  const timeline=isSWD2601Project(project)?swdScheduleOverviewHTML(project):'<div class="section"><b>施工時間軸</b></div><div class="card">'+projectGanttHTML(project,true)+'</div>';
+  return '<div class="card buildflow-overview-stats"><div><span class="muted">工期</span><b>'+esc(projectSchedulePeriodLabel(project))+'</b></div><div><span class="muted">總進度</span><b>'+projectTotalScheduleProgress(project)+'%</b></div></div>'+timeline+projectSummaryItems('現在施工',projectCurrentSteps(project),project)+projectSummaryItems('接下來施工',projectUpcomingSteps(project),project)+'<div class="section"><b>下次現場確認</b></div><div class="card">'+((confirmation.checks||[]).length?confirmation.checks.map(item=>'<div class="row">'+(item.done?'☑':'☐')+'　'+esc(item.text)+'</div>').join(''):'<div class="muted">尚無確認事項</div>')+'</div><div class="section"><b>施工檢查摘要</b></div><div class="card"><b>'+doneChecks+'/'+checks+' 項已完成</b><div class="muted">既有 Workflow／Checklist 摘要</div></div><div class="section"><b>本週紀錄／日報</b></div><div class="card"><div class="muted">已有 '+(project.siteReports||[]).length+' 份現場日報</div></div>';
 }
 function projectScheduleTrades(project){return [...new Set((project.steps||[]).map(step=>step.trade||'未分類'))];}
 function updateProjectScheduleDate(id,index,field,value,input){
