@@ -120,6 +120,7 @@ async function projectSiteAction(event){
     if(action==='detail'){if(root.dataset.sitePersistent)openNextSiteConfirmationItem(project.id,button.dataset.itemId);else openProjectSiteItem(project.id,date,button.dataset.itemId);}
     if(action==='reference-preview')openModal('<div class="project-site"><img class="daily-photo-full" src="'+esc(button.dataset.photoSrc)+'" alt="'+esc(button.dataset.photoTitle||'參考照片')+'"><p>'+esc(button.dataset.photoTitle||'參考照片')+'</p><button onclick="closeModal()">關閉</button></div>');
     if(action==='show-next-site-add'){const form=root.querySelector('[data-site-next-check-form]');if(form){form.hidden=false;form.elements.text.focus();}}
+    if(action==='show-protection-add'){const form=root.querySelector('[data-protection-add-form]');if(form){form.hidden=false;form.elements.label.focus();}}
     if(action==='communication-detail')openProjectCommunicationItem(project.id,button.dataset.itemId);
     if(action==='upload'||action==='camera')root.querySelector(action==='camera'?'[data-site-camera]':'[data-site-files]').click();
     if(action==='remove-appointment'){projectSiteUpdate(project,()=>{project.siteAppointments=project.siteAppointments.filter(item=>item.id!==button.dataset.itemId||item.generatedItemId);});refreshProjectSite(project);}
