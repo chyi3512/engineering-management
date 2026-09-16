@@ -55,6 +55,7 @@ function projectSitePhotosHTML(day,itemId){
   const photos=itemId?day.photos.filter(photo=>day.checks.find(item=>item.id===itemId)?.photoIds.includes(photo.id)):day.photos;
   return photos.map(photo=>'<div class="site-photo"><button class="site-photo-preview" data-site-action="preview" data-photo-id="'+esc(photo.id)+'"><img data-daily-photo="'+esc(photo.id)+'" alt="現場照片"></button><input aria-label="照片簡短說明" data-site-caption="'+esc(photo.id)+'" value="'+esc(photo.description||'')+'" placeholder="簡短說明"><button class="light" data-site-action="remove-photo" data-photo-id="'+esc(photo.id)+'">刪除照片</button></div>').join('');
 }
+function nextSiteConfirmationPhotosHTML(project,itemId){const day=projectSiteDay(project),item=nextSiteConfirmation(project).checks.find(check=>check.id===itemId),ids=item?.photoIds||[];return day.photos.filter(photo=>ids.includes(photo.id)).map(photo=>'<div class="site-photo"><button class="site-photo-preview" data-site-action="preview" data-photo-id="'+esc(photo.id)+'"><img data-daily-photo="'+esc(photo.id)+'" alt="現場照片"></button><input aria-label="照片簡短說明" data-site-caption="'+esc(photo.id)+'" value="'+esc(photo.description||'')+'" placeholder="簡短說明"><button class="light" data-site-action="remove-photo" data-photo-id="'+esc(photo.id)+'">刪除照片</button></div>').join('');}
 function projectSiteMessage(root,message){root?.querySelectorAll('[data-site-message]').forEach(el=>el.textContent=message);}
 function bindProjectSite(project){
   for(const root of main.querySelectorAll('[data-site-project]')){
@@ -72,6 +73,7 @@ function bindProjectSite(project){
       }
     });
     root.addEventListener('submit',event=>{
+      if(event.target.matches('[data-site-next-check-form]')){event.preventDefault();const form=event.target,text=form.elements.text.value.trim();if(!form.reportValidity()||!text)return;try{projectSiteUpdate(project,()=>nextSiteConfirmation(project).checks.push(projectSiteCheck(text)));form.elements.text.value='';form.hidden=true;refreshProjectSite(project);}catch(error){projectSiteMessage(root,'尚未儲存：'+error.message);}return;}
       if(!event.target.matches('[data-site-appointment-form]'))return;event.preventDefault();
       const form=event.target,date=form.elements.date.value,text=form.elements.text.value.trim();if(!form.reportValidity()||!isCompleteScheduleDate(date)||!text)return;
       try{projectSiteUpdate(project,()=>{project.siteAppointments||=[];project.siteAppointments.push({id:dailyReportId(),date,text,generatedItemId:'',generatedDate:''});});ensureProjectSiteAppointments(project);form.elements.text.value='';refreshProjectSite(project);}catch(error){projectSiteMessage(root,'尚未儲存：'+error.message);}
@@ -92,7 +94,7 @@ function projectSiteInput(event){
   const project=dailyProject(root.dataset.siteProject),date=root.dataset.siteDate;if(!project)return;
   if(input.matches('[data-site-files],[data-site-camera]')){if(event.type==='change'){const files=Array.from(input.files);input.value='';addProjectSitePhotos(project,date,files,root.dataset.siteItem||'',root);}return;}
   try{
-    if(input.hasAttribute('data-site-check')){if(root.dataset.sitePersistent)projectSiteUpdate(project,()=>{const item=nextSiteConfirmation(project).checks.find(check=>check.id===input.dataset.siteCheck);if(item)item.done=input.checked;});else projectSiteWriteDay(project,date,day=>{const item=day.checks.find(check=>check.id===input.dataset.siteCheck);if(item)item.done=input.checked;});refreshProjectSite(project);}
+    if(input.hasAttribute('data-site-check')){if(root.dataset.sitePersistent)projectSiteUpdate(project,()=>{const confirmation=nextSiteConfirmation(project),item=confirmation.checks.find(check=>check.id===input.dataset.siteCheck);if(!item)return;item.done=input.checked;if(item.done){project.siteDays||={};project.siteDays[date]||=projectSiteDay(project,date);project.siteDays[date].checks.push({...item,completedAt:new Date().toISOString()});confirmation.checks=confirmation.checks.filter(check=>check.id!==item.id);}});else projectSiteWriteDay(project,date,day=>{const item=day.checks.find(check=>check.id===input.dataset.siteCheck);if(item)item.done=input.checked;});refreshProjectSite(project);}
     if(input.hasAttribute('data-site-communication-check')){projectSiteUpdate(project,()=>{const item=projectCommunicationItems(project).find(item=>item.id===input.dataset.siteCommunicationCheck);if(item)item.done=input.checked;});refreshProjectSite(project);}
     if(input.hasAttribute('data-site-trade'))projectSiteWriteDay(project,date,day=>{day.trades=input.checked?[...new Set([...day.trades,input.dataset.siteTrade])]:day.trades.filter(trade=>trade!==input.dataset.siteTrade);});
     if(input.hasAttribute('data-site-caption'))projectSiteWriteDay(project,date,day=>{const photo=day.photos.find(photo=>photo.id===input.dataset.siteCaption);if(photo)photo.description=input.value;});
@@ -104,12 +106,13 @@ async function projectSiteAction(event){
   const action=button.dataset.siteAction;
   try{
     if(action==='detail'){if(root.dataset.sitePersistent)openNextSiteConfirmationItem(project.id,button.dataset.itemId);else openProjectSiteItem(project.id,date,button.dataset.itemId);}
+    if(action==='show-next-site-add'){const form=root.querySelector('[data-site-next-check-form]');if(form){form.hidden=false;form.elements.text.focus();}}
     if(action==='communication-detail')openProjectCommunicationItem(project.id,button.dataset.itemId);
     if(action==='upload'||action==='camera')root.querySelector(action==='camera'?'[data-site-camera]':'[data-site-files]').click();
     if(action==='remove-appointment'){projectSiteUpdate(project,()=>{project.siteAppointments=project.siteAppointments.filter(item=>item.id!==button.dataset.itemId||item.generatedItemId);});refreshProjectSite(project);}
     if(action==='remove-photo'){
       const day=projectSiteDay(project,date),photo=day.photos.find(photo=>photo.id===button.dataset.photoId);if(!photo)return;
-      projectSiteWriteDay(project,date,day=>{day.photos=day.photos.filter(p=>p.id!==photo.id);day.checks.forEach(item=>item.photoIds=item.photoIds.filter(id=>id!==photo.id));});
+      if(root.dataset.sitePersistent)projectSiteUpdate(project,()=>{project.siteDays||={};project.siteDays[date]||=projectSiteDay(project,date);project.siteDays[date].photos=project.siteDays[date].photos.filter(p=>p.id!==photo.id);nextSiteConfirmation(project).checks.forEach(item=>item.photoIds=item.photoIds.filter(id=>id!==photo.id));});else projectSiteWriteDay(project,date,day=>{day.photos=day.photos.filter(p=>p.id!==photo.id);day.checks.forEach(item=>item.photoIds=item.photoIds.filter(id=>id!==photo.id));});
       try{await removeDailyPhotoFiles(day,[photo]);}catch(error){/* 中繼資料已儲存；孤立照片可由瀏覽器清理。 */}
       refreshProjectSite(project);if(root.dataset.siteItem)renderProjectSiteItemPhotos(root,project,date);
     }
@@ -128,11 +131,14 @@ async function projectSiteAction(event){
 }
 function openNextSiteConfirmationItem(projectId,itemId){
   const project=dailyProject(projectId),confirmation=nextSiteConfirmation(project),item=confirmation.checks.find(item=>item.id===itemId);if(!item)return;
-  openModal('<div class="project-site"><h2>'+esc(item.text)+'</h2><label>備註<textarea id="nextSiteNote">'+esc(item.note||'')+'</textarea></label><label>處理狀態<select id="nextSiteStatus">'+dailyOptions(SITE_STATUSES,item.status)+'</select></label><div class="actions"><button class="light" id="nextSiteConvert" '+(item.issueId?'disabled':'')+'>'+ (item.issueId?'已轉為問題':'轉為問題')+'</button><button id="nextSiteClose">完成</button></div><p class="muted" id="nextSiteMessage"></p></div>');
-  const persist=()=>{try{projectSiteUpdate(project,()=>{const current=nextSiteConfirmation(project).checks.find(check=>check.id===itemId);if(current){current.note=document.getElementById('nextSiteNote').value;current.status=document.getElementById('nextSiteStatus').value;}});return true;}catch(error){document.getElementById('nextSiteMessage').textContent='未能儲存：'+error.message;return false;}};
+  openModal('<div class="project-site" data-site-project="'+esc(projectId)+'" data-site-date="'+esc(projectSiteDate())+'" data-site-persistent="true" data-site-item="'+esc(itemId)+'"><label>事項<input id="nextSiteText" value="'+esc(item.text)+'"></label><label>備註<textarea id="nextSiteNote">'+esc(item.note||'')+'</textarea></label><label>處理狀態<select id="nextSiteStatus">'+dailyOptions(SITE_STATUSES,item.status)+'</select></label><div class="site-actions"><button class="light" data-site-action="upload">＋照片</button><button class="light" data-site-action="camera">拍照</button></div><input type="file" accept="image/*" multiple data-site-files hidden><input type="file" accept="image/*" capture="environment" data-site-camera hidden><div class="site-photos" data-site-item-photos>'+nextSiteConfirmationPhotosHTML(project,itemId)+'</div><div class="actions"><button class="light" id="nextSiteDelete">刪除</button><button class="light" id="nextSiteConvert" '+(item.issueId?'disabled':'')+'>'+ (item.issueId?'已轉為問題':'轉為問題')+'</button><button id="nextSiteClose">完成</button></div><p class="muted" id="nextSiteMessage"></p></div>');
+  const root=sheet.querySelector('[data-site-item]');root.addEventListener('click',projectSiteAction);root.addEventListener('change',projectSiteInput);root.addEventListener('input',event=>{if(event.target.matches('[data-site-caption]'))projectSiteInput(event);});
+  const persist=()=>{const text=document.getElementById('nextSiteText').value.trim();if(!text){document.getElementById('nextSiteMessage').textContent='請輸入事項。';return false;}try{projectSiteUpdate(project,()=>{const current=nextSiteConfirmation(project).checks.find(check=>check.id===itemId);if(current){current.text=text;current.note=document.getElementById('nextSiteNote').value;current.status=document.getElementById('nextSiteStatus').value;}});return true;}catch(error){document.getElementById('nextSiteMessage').textContent='未能儲存：'+error.message;return false;}};
   document.getElementById('nextSiteNote').addEventListener('input',persist);document.getElementById('nextSiteStatus').addEventListener('change',persist);
   document.getElementById('nextSiteClose').onclick=()=>{if(persist()){closeModal();refreshProjectSite(project);}};
+  document.getElementById('nextSiteDelete').onclick=()=>{if(!confirm('確定刪除這項現場確認？'))return;projectSiteUpdate(project,()=>{nextSiteConfirmation(project).checks=nextSiteConfirmation(project).checks.filter(check=>check.id!==itemId);});closeModal();refreshProjectSite(project);};
   document.getElementById('nextSiteConvert').onclick=function(){if(!persist())return;const current=nextSiteConfirmation(project).checks.find(check=>check.id===itemId);if(!current||current.issueId)return;const issue={id:dailyReportId(),title:current.text,note:current.note||'',priority:'一般',status:current.status,project:project.name,projectId:project.id,date:new Date().toLocaleDateString('zh-TW'),siteItemId:itemId};projectSiteUpdate(project,()=>{current.issueId=issue.id;data.issues.unshift(issue);project.issueCount=(Number(project.issueCount)||0)+1;});this.disabled=true;this.textContent='已轉為問題';refreshProjectSite(project);};
+  loadDailyPhotoImages(projectSiteDay(project),root);
 }
 function openProjectCommunicationItem(projectId,itemId){
   const project=dailyProject(projectId),item=projectCommunicationItems(project).find(item=>item.id===itemId);if(!item)return;
@@ -171,13 +177,13 @@ async function addProjectSitePhotos(project,date,files,itemId,root){
     for(const file of files){
       const photo={id:dailyReportId(),trade:'',description:'',originalName:file.name,storage:'pending'},record={...projectSiteDay(project,date),photos:[photo]},blob=await prepareDailyPhoto(file);
       await persistDailyPhotos({report:record,blobs:new Map([[photo.id,blob]])});
-      try{projectSiteWriteDay(project,date,day=>{day.photos.push(photo);if(itemId){const item=day.checks.find(item=>item.id===itemId);if(item)item.photoIds.push(photo.id);}});}catch(error){await removeDailyPhotoFiles(record,[photo]).catch(()=>{});throw error;}saved++;
+      try{if(root?.dataset.sitePersistent)projectSiteUpdate(project,()=>{project.siteDays||={};project.siteDays[date]||=projectSiteDay(project,date);project.siteDays[date].photos.push(photo);const item=nextSiteConfirmation(project).checks.find(item=>item.id===itemId);if(item)item.photoIds.push(photo.id);});else projectSiteWriteDay(project,date,day=>{day.photos.push(photo);if(itemId){const item=day.checks.find(item=>item.id===itemId);if(item)item.photoIds.push(photo.id);}});}catch(error){await removeDailyPhotoFiles(record,[photo]).catch(()=>{});throw error;}saved++;
     }
     projectSiteMessage(root,'已儲存 '+saved+' 張照片');
   }catch(error){projectSiteMessage(root,'已儲存 '+saved+' 張；其餘未儲存：'+error.message);}
   finally{projectSitePending--;refreshProjectSite(project);if(root?.isConnected&&itemId)renderProjectSiteItemPhotos(root,project,date);}
 }
-function renderProjectSiteItemPhotos(root,project,date){const box=root.querySelector('[data-site-item-photos]');if(box){const day=projectSiteDay(project,date);box.innerHTML=projectSitePhotosHTML(day,root.dataset.siteItem);loadDailyPhotoImages(day,box);}}
+function renderProjectSiteItemPhotos(root,project,date){const box=root.querySelector('[data-site-item-photos]');if(box){const day=projectSiteDay(project,date);box.innerHTML=root.dataset.sitePersistent?nextSiteConfirmationPhotosHTML(project,root.dataset.siteItem):projectSitePhotosHTML(day,root.dataset.siteItem);loadDailyPhotoImages(day,box);}}
 async function generateProjectSiteReport(projectId,date=projectSiteDate()){
   const project=dailyProject(projectId);if(!project||!isCompleteScheduleDate(date))throw new Error('工程或日期無效');
   if(projectSitePending)throw new Error('請等待照片儲存完成');ensureProjectSiteAppointments(project,date);
