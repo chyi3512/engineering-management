@@ -5,6 +5,8 @@ function projectSiteDate(){return localDateISO(new Date());}
 function projectSiteDay(project,date=projectSiteDate()){
   return project.siteDays?.[date]||{id:'site:'+date,projectId:project.id,date,checks:[],trades:[],photos:[]};
 }
+function projectStepPhotos(project,stepIndex){const step=project.steps?.[stepIndex],stepId=String(step?.id??stepIndex);return Object.values(project.siteDays||{}).flatMap(day=>(day.photos||[]).filter(photo=>String(photo.stepId||'')===stepId||(photo.stepTrade===step?.trade&&photo.stepName===step?.name)).map(photo=>({day,photo})));}
+async function loadProjectStepPhotoImages(project,root){for(const image of root.querySelectorAll('[data-step-photo]')){const day=projectSiteDay(project,image.dataset.stepPhotoDate),photo=(day.photos||[]).find(item=>item.id===image.dataset.stepPhoto);if(photo){const url=await dailyPhotoURL(day,photo);if(url)image.src=url;}}}
 function projectSiteUpdate(project,update){
   const keys=['siteDays','siteAppointments','siteReports','nextSiteConfirmation','communicationItems'],previous=keys.map(key=>({key,had:Object.prototype.hasOwnProperty.call(project,key),value:project[key]}));
   for(const entry of previous)if(entry.had)project[entry.key]=JSON.parse(JSON.stringify(entry.value));
@@ -76,12 +78,14 @@ function bindProjectSite(project){
       }
     });
     root.addEventListener('submit',event=>{
+      if(event.target.matches('[data-protection-add-form]')){event.preventDefault();const form=event.target,step=project.steps?.[Number(root.dataset.siteStepIndex)],label=form.elements.label.value.trim();if(!step||!label)return;projectSiteUpdate(project,()=>{const defaults=Array.isArray(step.protectionChecks)&&step.protectionChecks.length?step.protectionChecks:((typeof PROTECTION_CONFIRMATION_DEFAULTS==='undefined'?[]:PROTECTION_CONFIRMATION_DEFAULTS).map((item,index)=>({id:'default-protection-'+index,label:item,checked:false,checkedAt:''})));step.protectionChecks=[...defaults,{id:dailyReportId(),label,checked:false,checkedAt:''}];});openProject(project.id,'overview');return;}
       if(event.target.matches('[data-site-next-check-form]')){event.preventDefault();const form=event.target,text=form.elements.text.value.trim();if(!form.reportValidity()||!text)return;try{projectSiteUpdate(project,()=>nextSiteConfirmation(project).checks.push(projectSiteCheck(text)));form.elements.text.value='';form.hidden=true;refreshProjectSite(project);}catch(error){projectSiteMessage(root,'尚未儲存：'+error.message);}return;}
       if(!event.target.matches('[data-site-appointment-form]'))return;event.preventDefault();
       const form=event.target,date=form.elements.date.value,text=form.elements.text.value.trim();if(!form.reportValidity()||!isCompleteScheduleDate(date)||!text)return;
       try{projectSiteUpdate(project,()=>{project.siteAppointments||=[];project.siteAppointments.push({id:dailyReportId(),date,text,generatedItemId:'',generatedDate:''});});ensureProjectSiteAppointments(project);form.elements.text.value='';refreshProjectSite(project);}catch(error){projectSiteMessage(root,'尚未儲存：'+error.message);}
     });
     loadDailyPhotoImages(projectSiteDay(project,root.dataset.siteDate),root);
+    if(root.dataset.siteStepIndex!==undefined)loadProjectStepPhotoImages(project,root);
   }
 }
 function refreshProjectSite(project){
@@ -98,6 +102,7 @@ function projectSiteInput(event){
   if(input.matches('[data-site-files],[data-site-camera]')){if(event.type==='change'){const files=Array.from(input.files);input.value='';addProjectSitePhotos(project,date,files,root.dataset.siteItem||'',root);}return;}
   try{
     if(input.hasAttribute('data-site-check')){if(root.dataset.sitePersistent)projectSiteUpdate(project,()=>{const confirmation=nextSiteConfirmation(project),item=confirmation.checks.find(check=>check.id===input.dataset.siteCheck);if(!item)return;item.done=input.checked;if(root.dataset.siteSummary){if(item.done)item.completedAt=projectSiteDate();else delete item.completedAt;}else if(item.done){project.siteDays||={};project.siteDays[date]||=projectSiteDay(project,date);project.siteDays[date].checks.push({...item,completedAt:projectSiteDate()});confirmation.checks=confirmation.checks.filter(check=>check.id!==item.id);}});else projectSiteWriteDay(project,date,day=>{const item=day.checks.find(check=>check.id===input.dataset.siteCheck);if(item){item.done=input.checked;if(item.done)item.completedAt=projectSiteDate();else delete item.completedAt;}});if(root.dataset.siteSummary)openProject(project.id,'overview');else refreshProjectSite(project);}
+    if(input.hasAttribute('data-protection-check')){const step=project.steps?.[Number(root.dataset.siteStepIndex)];if(!step)return;projectSiteUpdate(project,()=>{const defaults=Array.isArray(step.protectionChecks)&&step.protectionChecks.length?step.protectionChecks:((typeof PROTECTION_CONFIRMATION_DEFAULTS==='undefined'?[]:PROTECTION_CONFIRMATION_DEFAULTS).map((label,index)=>({id:'default-protection-'+index,label,checked:false,checkedAt:''})));step.protectionChecks=defaults.map(item=>item.id===input.dataset.protectionCheck?{...item,checked:input.checked,checkedAt:input.checked?new Date().toISOString():''}:item);});openProject(project.id,'overview');}
     if(input.hasAttribute('data-site-communication-check')){projectSiteUpdate(project,()=>{const item=projectCommunicationItems(project).find(item=>item.id===input.dataset.siteCommunicationCheck);if(item){item.done=input.checked;if(item.done)item.completedAt=projectSiteDate();else delete item.completedAt;}});if(root.dataset.siteSummary)openProject(project.id,'overview');else refreshProjectSite(project);}
     if(input.hasAttribute('data-site-appointment-check')){projectSiteUpdate(project,()=>{const item=(project.siteAppointments||[]).find(item=>item.id===input.dataset.siteAppointmentCheck);if(item){item.done=input.checked;if(item.done)item.completedAt=projectSiteDate();else delete item.completedAt;}});if(root.dataset.siteSummary)openProject(project.id,'overview');else refreshProjectSite(project);}
     if(input.hasAttribute('data-site-trade'))projectSiteWriteDay(project,date,day=>{day.trades=input.checked?[...new Set([...day.trades,input.dataset.siteTrade])]:day.trades.filter(trade=>trade!==input.dataset.siteTrade);});
@@ -181,13 +186,13 @@ async function addProjectSitePhotos(project,date,files,itemId,root){
   let saved=0;
   try{
     for(const file of files){
-      const photo={id:dailyReportId(),trade:'',description:'',originalName:file.name,storage:'pending'},record={...projectSiteDay(project,date),photos:[photo]},blob=await prepareDailyPhoto(file);
+      const step=project.steps?.[Number(root?.dataset.siteStepIndex)],photo={id:dailyReportId(),trade:step?.trade||'',description:'',originalName:file.name,storage:'pending',...(step?{stepId:String(step.id??root.dataset.siteStepIndex),stepTrade:step.trade||'',stepName:step.name||'',takenAt:new Date().toISOString()}:{} )},record={...projectSiteDay(project,date),photos:[photo]},blob=await prepareDailyPhoto(file);
       await persistDailyPhotos({report:record,blobs:new Map([[photo.id,blob]])});
       try{if(root?.dataset.sitePersistent)projectSiteUpdate(project,()=>{project.siteDays||={};project.siteDays[date]||=projectSiteDay(project,date);project.siteDays[date].photos.push(photo);const item=nextSiteConfirmation(project).checks.find(item=>item.id===itemId);if(item)item.photoIds.push(photo.id);});else projectSiteWriteDay(project,date,day=>{day.photos.push(photo);if(itemId){const item=day.checks.find(item=>item.id===itemId);if(item)item.photoIds.push(photo.id);}});}catch(error){await removeDailyPhotoFiles(record,[photo]).catch(()=>{});throw error;}saved++;
     }
     projectSiteMessage(root,'已儲存 '+saved+' 張照片');
   }catch(error){projectSiteMessage(root,'已儲存 '+saved+' 張；其餘未儲存：'+error.message);}
-  finally{projectSitePending--;refreshProjectSite(project);if(root?.isConnected&&itemId)renderProjectSiteItemPhotos(root,project,date);}
+  finally{projectSitePending--;if(root?.dataset.siteStepIndex!==undefined)openProject(project.id,'overview');else refreshProjectSite(project);if(root?.isConnected&&itemId)renderProjectSiteItemPhotos(root,project,date);}
 }
 function renderProjectSiteItemPhotos(root,project,date){const box=root.querySelector('[data-site-item-photos]');if(box){const day=projectSiteDay(project,date);box.innerHTML=root.dataset.sitePersistent?nextSiteConfirmationPhotosHTML(project,root.dataset.siteItem):projectSitePhotosHTML(day,root.dataset.siteItem);loadDailyPhotoImages(day,box);}}
 async function generateProjectSiteReport(projectId,date=projectSiteDate()){
