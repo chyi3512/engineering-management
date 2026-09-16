@@ -38,6 +38,7 @@
 .project-trade-label{flex:1}
 .schedule-view-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
 .schedule-view-tabs [aria-pressed=true]{background:#111;color:#fff}
+.quote-comparison-table .quote-sticky-name,.quote-comparison-table .quote-sticky-spec{position:sticky;background:#fff;z-index:1}.quote-comparison-table .quote-sticky-name{left:0;width:140px;min-width:140px}.quote-comparison-table .quote-sticky-spec{left:140px;width:100px;min-width:100px}.quote-comparison-table thead .quote-sticky-name,.quote-comparison-table thead .quote-sticky-spec{z-index:2}
 .library-trade-card summary{cursor:pointer}
 
 /* 工程日報：樣式僅套用於日報頁與日報 modal。 */
