@@ -68,8 +68,19 @@ function nextSiteConfirmationPhotosHTML(project,itemId){const day=projectSiteDay
 function projectSiteMessage(root,message){root?.querySelectorAll('[data-site-message]').forEach(el=>el.textContent=message);}
 function projectInspectionAccordionUpdate(root,step){const checks=typeof projectStepInspectionChecks==='function'?projectStepInspectionChecks(step):(step.protectionChecks||step.acceptanceChecks||[]),done=checks.filter(item=>item.checked).length,allDone=checks.length>0&&done===checks.length;root.querySelectorAll('[data-inspection-status]').forEach(el=>el.textContent=allDone?'已完成':'未完成');root.querySelectorAll('[data-inspection-count]').forEach(el=>el.textContent=done+' / '+checks.length);root.querySelectorAll('.node-acceptance').forEach(details=>details.open=!allDone);}
 function projectSiteChecklistAccordion(root,step){for(const section of root.querySelectorAll('.node-section')){const head=section.querySelector(':scope > .node-section-head'),list=section.querySelector(':scope > .node-checklist');if(!head||!list||head.querySelector('b')?.textContent!=='確認清單'||section.querySelector(':scope > details'))continue;const checks=step.checklist||[],done=checks.filter(item=>item.checked).length,allDone=checks.length>0&&done===checks.length,details=document.createElement('details'),summary=document.createElement('summary');details.className='node-acceptance node-confirmation';details.open=!allDone;summary.className='node-section-head';summary.innerHTML='<b>確認清單</b><span class="muted">'+(allDone?'已完成':'未完成')+'</span><span class="muted">'+done+' / '+checks.length+'</span><span class="node-acceptance-chevron" aria-hidden="true">⌄</span>';details.append(summary,list);details.insertAdjacentHTML('beforeend','<button type="button" class="light node-small-button" data-site-action="show-node-check-add">＋ 新增確認項目</button><form data-node-check-add-form hidden><input name="label" placeholder="輸入確認項目…" autocomplete="off" required></form>');section.replaceWith(details);}}
+function projectSiteNotesAccordion(root){
+  const normalize=value=>String(value||'').replace(/^確認\s*/, '').trim();
+  for(const section of root.querySelectorAll('.node-notes')){
+    const confirmed=new Set(Array.from(root.querySelectorAll('.node-checklist span')).map(el=>normalize(el.textContent)));
+    section.querySelectorAll('.node-note').forEach(note=>{if(confirmed.has(normalize(note.textContent)))note.hidden=true;});
+    const visible=Array.from(section.querySelectorAll('.node-note')).filter(note=>!note.hidden),details=document.createElement('details'),summary=document.createElement('summary');
+    details.className='node-section node-notes';summary.className='node-section-head';summary.innerHTML='<b>施工筆記</b><span class="muted">'+visible.length+'則</span><span aria-hidden="true">⌄</span>';
+    details.append(summary);visible.forEach(note=>details.append(note));if(!visible.length)details.insertAdjacentHTML('beforeend','<div class="muted node-empty">尚無施工筆記</div>');section.replaceWith(details);
+  }
+}
 function bindProjectSite(project){
   for(const root of main.querySelectorAll('[data-site-project]')){
+    projectSiteNotesAccordion(root);
     root.addEventListener('click',projectSiteAction);
     root.addEventListener('change',projectSiteInput);
     root.addEventListener('input',event=>{if(event.target.matches('[data-site-caption]'))projectSiteInput(event);});

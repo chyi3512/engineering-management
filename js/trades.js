@@ -49,12 +49,11 @@ function libraryDetailBySource(source,index,j){
 }
 
 function libraryDetail(ti,j){
-  const t=libData[ti],it=t&&t.items[j]; if(!t||!it)return library();
+  const t=libData[ti],it=t&&t.items[j]; if(!t||!it)return library();const checks=Array.isArray(it[6])?it[6]:[],notes=typeof libraryConstructionNotes==='function'?libraryConstructionNotes(it[1],checks):(it[1]||[]);
   main.innerHTML='<button class="back" onclick="openLibraryTrade(\'custom\','+ti+')">← 返回施工項目</button>'+
     '<div class="card"><span class="tag">'+esc(t.name)+'</span><h2 style="margin:9px 0 5px">'+esc(it[0])+'</h2></div>'+
-    '<div class="section"><b>注意事項</b><button class="light" onclick="addLibraryItemNote(\'custom\','+ti+','+j+')">＋ 新增注意事項</button></div>'+
-    '<div class="card">'+((it[1]||[]).length?(it[1]||[]).map(x=>'<div class="row"><div style="flex:1">'+esc(x)+'</div></div>').join(''):'<div class="empty">尚未設定注意事項</div>')+'</div>'+
-    '<div class="section"><b>確認清單</b></div><div class="card">'+(Array.isArray(it[6])&&it[6].length?it[6].map(check=>'<div class="row"><span style="flex:1">'+esc(check.text||check)+'</span></div>').join(''):'<div class="empty">尚未設定確認清單</div>')+'</div>'+
+    '<div class="section"><b>確認清單</b><span class="muted">0 / '+checks.length+'</span></div><div class="card">'+(checks.length?checks.map(check=>'<div class="row"><span style="flex:1">'+esc(check.text||check)+'</span></div>').join(''):'<div class="empty">尚未設定確認清單</div>')+'</div>'+
+    '<details class="node-section" style="margin-top:18px"><summary class="node-section-head"><b>施工筆記</b><span class="muted">'+notes.length+'則</span><span aria-hidden="true">⌄</span></summary><div class="card" style="margin-top:10px">'+(notes.length?notes.map(note=>'<div class="row"><span style="flex:1">'+esc(note)+'</span></div>').join(''):'<div class="empty">尚無施工筆記</div>')+'<button class="light" style="margin-top:10px" onclick="showLibraryItemNoteForm()">＋ 新增施工筆記</button><form id="libraryItemNoteForm" hidden style="margin-top:10px" onsubmit="saveLibraryItemNoteInput(event,\'custom\','+ti+','+j+')"><input name="note" placeholder="輸入施工筆記…" required><button type="submit" class="light">新增</button></form></div></details>'+
     '<div class="section"><b>參考照片</b><button class="light" onclick="addLibraryItemPhoto(\'custom\','+ti+','+j+')">＋ 新增照片</button></div><div class="card library-photo-card">'+libraryItemPhotosHTML('custom',ti,j)+'</div>';
 }
 

@@ -247,6 +247,10 @@ function renderWeeklyStages(items){
 }
 
 
+function libraryConstructionNotes(notes,checks){
+  const confirmed=new Set((checks||[]).map(item=>String(item.text||item.label||item||'').replace(/^確認\s*/, '').trim()));
+  return (notes||[]).filter(note=>!confirmed.has(String(note||'').replace(/^確認\s*/, '').trim()));
+}
 function exampleLibraryItemDetail(ti,j){
   const t=data.trades[ti], it=t&&t.items[j];
   if(!t||!it)return library();
@@ -256,23 +260,19 @@ function exampleLibraryItemDetail(ti,j){
   }else{
     it[6]=it[6].map(x=>typeof x==='string'?{text:x,done:false}:x).filter(x=>x&&x.text);
   }
-  const checks=it[6], done=checks.filter(x=>x.done).length;
+  const checks=it[6], done=checks.filter(x=>x.done).length,notes=libraryConstructionNotes(it[1],checks);
   main.innerHTML=
     '<button class="back" onclick="openLibraryTrade(\'2022\','+ti+')">← 返回施工項目</button>'+
     '<div class="card">'+
       '<span class="tag">'+esc(t.name)+'</span>'+
       '<h2 style="margin:9px 0 5px">'+esc(it[0])+'</h2>'+
     '</div>'+
-    '<div class="section"><b>注意事項</b></div>'+
-    '<div class="card">'+
-      ((it[1]||[]).length?(it[1]||[]).map(note=>'<div class="row"><span style="flex:1">'+esc(note)+'</span></div>').join(''):'<div class="empty">尚未設定注意事項</div>')+
-      '<button class="light" style="margin-top:10px" onclick="addLibraryItemNote(\'2022\','+ti+','+j+')">＋ 新增注意事項</button>'+
-    '</div>'+
     '<div class="section"><b>確認清單</b><span class="muted">'+done+'/'+checks.length+'</span></div>'+
     '<div class="card">'+
       (checks.length?checks.map((c,i)=>'<label class="row" style="cursor:pointer"><input type="checkbox" '+(c.done?'checked':'')+' onchange="toggleLibraryCheck('+ti+','+j+','+i+',this.checked)" style="width:20px;height:20px;margin:0;flex:none"><span style="flex:1;'+(c.done?'text-decoration:line-through;color:#999':'')+'">'+esc(c.text)+'</span></label>').join(''):'<div class="empty">尚未設定確認項目</div>')+
       '<button class="light" style="margin-top:10px" onclick="editLibraryChecks('+ti+','+j+')">＋ 新增確認項目</button>'+
     '</div>'+
+    '<details class="node-section" style="margin-top:18px"><summary class="node-section-head"><b>施工筆記</b><span class="muted">'+notes.length+'則</span><span aria-hidden="true">⌄</span></summary><div class="card" style="margin-top:10px">'+(notes.length?notes.map(note=>'<div class="row"><span style="flex:1">'+esc(note)+'</span></div>').join(''):'<div class="empty">尚無施工筆記</div>')+'<button class="light" style="margin-top:10px" onclick="showLibraryItemNoteForm()">＋ 新增施工筆記</button><form id="libraryItemNoteForm" hidden style="margin-top:10px" onsubmit="saveLibraryItemNoteInput(event,\'2022\','+ti+','+j+')"><input name="note" placeholder="輸入施工筆記…" required><button type="submit" class="light">新增</button></form></div></details>'+
     '<div class="section"><b>參考照片</b><button class="light" onclick="addLibraryItemPhoto(\'2022\','+ti+','+j+')">＋ 新增照片</button></div><div class="card library-photo-card">'+libraryItemPhotosHTML('2022',ti,j)+'</div>';
 }
 
@@ -344,8 +344,10 @@ function toggleLibraryCheck(ti,j,i,checked){
   exampleLibraryItemDetail(ti,j);
 }
 
-function addLibraryItemNote(source,index,j){
-  const trade=source==='2022'?data.trades[index]:libData[index],item=trade?.items?.[j],text=prompt('注意事項');
+function showLibraryItemNoteForm(){const form=document.getElementById('libraryItemNoteForm');if(form){form.hidden=false;form.elements.note.focus();}}
+function saveLibraryItemNoteInput(event,source,index,j){event.preventDefault();const text=event.currentTarget.elements.note.value.trim();if(text)addLibraryItemNote(source,index,j,text);}
+function addLibraryItemNote(source,index,j,value){
+  const trade=source==='2022'?data.trades[index]:libData[index],item=trade?.items?.[j],text=value===undefined?prompt('施工筆記'):value;
   if(!item||!text?.trim())return;
   if(!Array.isArray(item[1]))item[1]=[];item[1].push(text.trim());source==='2022'?save():saveLib();libraryDetailBySource(source,index,j);
 }
