@@ -1,10 +1,9 @@
 let libraryExpanded=new Set();
 function library(e){
   nav(e);const groups=libraryGroups();
-  main.innerHTML='<div class="section"><div><b>工種庫</b><div class="muted">施工知識母庫：展開工種查看注意事項與施工項目。</div></div><button onclick="newLibraryTrade()">＋ 新增工種</button></div>'+groups.map(t=>{
-    const index=t.source==='2022'?t.ti:t.customIndex,key=t.source+':'+index;
-    const source=t.source,trade=source==='2022'?data.trades[index]:libData[index];
-    return '<details class="card library-trade-card" '+(libraryExpanded.has(key)?'open':'')+' ontoggle="rememberLibraryExpanded(\''+key+'\',this.open)"><summary><span class="tag">'+(source==='2022'?'2022 工程範例':'工種庫新增')+'</span><b class="library-home-trade-title" style="display:inline-block">'+esc(t.name)+'</b></summary><div class="section"><b>注意事項</b><button class="light" onclick="addLibraryTradeNote(\''+source+'\','+index+',true)">＋ 新增注意事項</button></div>'+libraryOuterTradeNotesHTML(trade,source,index)+'<div class="library-child-summary">'+t.items.map((it,j)=>'<span><b>'+(j+1)+'</b> '+esc(it[0])+'</span>').join('')+'</div><button class="light library-enter" onclick="openLibraryTrade(\''+source+'\','+index+')">查看施工項目與照片 →</button>'+(source==='custom'?' <button class="light" onclick="editLibraryTrade('+index+')">編輯工種</button>':'')+'</details>';
+  main.innerHTML='<div class="section"><div><b>工種庫</b><div class="muted">施工知識與施工範本</div></div><button onclick="newLibraryTrade()">＋ 新增工種</button></div>'+groups.map(t=>{
+    const index=t.source==='2022'?t.ti:t.customIndex,source=t.source;
+    return '<button class="card library-trade-card" style="width:100%;text-align:left;display:flex;align-items:center;gap:10px" onclick="openLibraryTrade(\''+source+'\','+index+')"><div style="flex:1"><b class="library-home-trade-title">'+esc(t.name)+'</b><div class="muted">'+t.items.length+' 個施工項目</div></div><span>›</span></button>';
   }).join('');
 }
 const libraryOuterNoteFilters={};
@@ -32,15 +31,16 @@ function libraryTradeDetail(tradeName,source,ti,customIndex){
   if(!t)return library();
   const items=t.items||[], index=source==='2022'?ti:customIndex;
   main.innerHTML=`<button class="back" onclick="library()">← 返回工種庫</button>
-    <div class="card"><span class="tag">${source==='2022'?'2022 工程範例':'工種庫新增'}</span><h2 class="library-trade-title">${esc(t.name)}</h2><div class="muted">工種｜${items.length} 個施工項目</div></div>
-    ${workflowTemplateSummary(t,source,index)}
-    <div class="section"><b>工種注意事項</b><button class="light" onclick="addLibraryTradeNote('${esc(source)}',${index})">＋ 新增</button></div>
-    <div class="card">${libraryTradeNotesHTML(t,source,index)}</div>
-    <div class="section"><b>照片參考</b><button class="light" onclick="addLibraryTradePhoto('${esc(source)}',${index})">＋ 新增照片</button></div>
-    <div class="card library-photo-card">${libraryTradePhotosHTML(source,index,t)}</div>
-    <div class="section"><b>施工項目</b><span class="muted">次項目</span></div>
-    <div class="card library-subitems">${items.length?items.map((it,j)=>`<div class="row library-subitem" style="cursor:pointer" onclick="libraryDetailBySource('${esc(source)}',${index},${j})"><span class="sub-index">${j+1}</span><div style="flex:1"><b>${esc(it[0])}</b><div class="muted">${(it[1]||[]).length} 項注意事項　｜　下一步：${esc(source==='2022'?progressNextFor2022(ti,j):(it[2]||'未設定'))}</div></div><span>→</span></div>`).join(''):'<div class="empty">尚未設定施工項目</div>'}</div>
-    <div class="hint">「${esc(t.name)}」是工種；${items.map(it=>'「'+esc(it[0])+'」').join('、')} 是這個工種底下的施工次項目。工種本身可以另外記錄整體注意事項。</div>`;
+    <div class="card"><h2 class="library-trade-title">${esc(t.name)}</h2><div class="muted">施工知識與施工範本</div></div>
+    <div class="section"><b>施工項目</b></div>
+    <div class="card library-subitems">${items.length?items.map((it,j)=>`<button class="row library-subitem" style="width:100%;cursor:pointer;text-align:left" onclick="libraryDetailBySource('${esc(source)}',${index},${j})"><div style="flex:1"><b>${esc(it[0])}</b></div><span>›</span></button>`).join(''):'<div class="empty">尚未設定施工項目</div>'}</div>
+    <button class="light" style="margin-top:12px" onclick="addLibrarySourceItem('${esc(source)}',${index})">＋ 新增施工項目</button>
+    ${(t.notes||[]).length||Array.isArray(t.photos)&&t.photos.length?'<div class="hint" style="margin-top:20px">原有未分類的工種注意事項與參考照片已保留，未自動改綁到施工項目，避免資料誤歸屬。</div>':''}`;
+}
+
+function addLibrarySourceItem(source,index){
+  const t=source==='2022'?data.trades[index]:libData[index],name=prompt('施工項目名稱');if(!t||!name?.trim())return;
+  t.items.push([name.trim(),[]]);source==='2022'?save():saveLib();libraryTradeDetail(t.name,source,index,index);
 }
 
 function libraryDetailBySource(source,index,j){
@@ -50,12 +50,12 @@ function libraryDetailBySource(source,index,j){
 
 function libraryDetail(ti,j){
   const t=libData[ti],it=t&&t.items[j]; if(!t||!it)return library();
-  main.innerHTML='<button class="back" onclick="library()">← 返回工種庫</button>'+
-    '<div class="card"><span class="tag">'+esc(t.name)+'</span><h2 style="margin:9px 0 5px">'+esc(it[0])+'</h2><div class="muted">施工知識標準內容</div></div>'+
-    '<div class="section"><b>前置條件／注意事項</b><button class="light" onclick="editLibraryItem('+ti+','+j+')">編輯</button></div>'+
-    '<div class="card">'+((it[1]||[]).length?(it[1]||[]).map(x=>'<div class="row"><div style="flex:1">□ '+esc(x)+'</div></div>').join(''):'<div class="empty">尚未設定</div>')+'</div>'+
-    '<div class="section"><b>下一個工程銜接</b></div><div class="card">'+(it[2]?'<b>→ '+esc(it[2])+'</b>':'<div class="muted">尚未設定</div>')+'</div>'+
-    '<div class="hint">這是工種庫母資料。套用到工程後，工程可以自行修改，不會反過來改變這裡。</div>';
+  main.innerHTML='<button class="back" onclick="openLibraryTrade(\'custom\','+ti+')">← 返回施工項目</button>'+
+    '<div class="card"><span class="tag">'+esc(t.name)+'</span><h2 style="margin:9px 0 5px">'+esc(it[0])+'</h2></div>'+
+    '<div class="section"><b>注意事項</b><button class="light" onclick="addLibraryItemNote(\'custom\','+ti+','+j+')">＋ 新增注意事項</button></div>'+
+    '<div class="card">'+((it[1]||[]).length?(it[1]||[]).map(x=>'<div class="row"><div style="flex:1">'+esc(x)+'</div></div>').join(''):'<div class="empty">尚未設定注意事項</div>')+'</div>'+
+    '<div class="section"><b>確認清單</b></div><div class="card">'+(Array.isArray(it[6])&&it[6].length?it[6].map(check=>'<div class="row"><span style="flex:1">'+esc(check.text||check)+'</span></div>').join(''):'<div class="empty">尚未設定確認清單</div>')+'</div>'+
+    '<div class="section"><b>參考照片</b><button class="light" onclick="addLibraryItemPhoto(\'custom\','+ti+','+j+')">＋ 新增照片</button></div><div class="card library-photo-card">'+libraryItemPhotosHTML('custom',ti,j)+'</div>';
 }
 
 function newLibraryTrade(){openModal('<h2>新增工種</h2><label>工種名稱</label><input id="ltn" placeholder="例如：拆除工程"><label>第一個施工項目</label><input id="lti" placeholder="例如：現場保護／拆除前確認"><label>注意事項（每行一項）</label><textarea id="ltno"></textarea><label>下一步</label><input id="ltnx" placeholder="例如：清運完成後進入水電放樣"><div class="actions"><button class="light" onclick="closeModal()">取消</button><button onclick="saveLibraryTrade()">建立</button></div>')}

@@ -249,7 +249,7 @@ function renderWeeklyStages(items){
 
 function exampleLibraryItemDetail(ti,j){
   const t=data.trades[ti], it=t&&t.items[j];
-  if(!t||!it)return exampleSchedule();
+  if(!t||!it)return library();
   if(!Array.isArray(it[6])){
     it[6]=(it[1]||[]).map(x=>({text:x,done:false}));
     save();
@@ -257,34 +257,23 @@ function exampleLibraryItemDetail(ti,j){
     it[6]=it[6].map(x=>typeof x==='string'?{text:x,done:false}:x).filter(x=>x&&x.text);
   }
   const checks=it[6], done=checks.filter(x=>x.done).length;
-  const items=scheduleItems();
   main.innerHTML=
-    '<button class="back" onclick="exampleSchedule()">← 返回工程庫</button>'+
+    '<button class="back" onclick="openLibraryTrade(\'2022\','+ti+')">← 返回施工項目</button>'+
     '<div class="card">'+
       '<span class="tag">'+esc(t.name)+'</span>'+
-      '<h2 style="margin:9px 0 5px">'+esc(it[0])+(it[7]?'<span class="checkpoint">◆ 主要查驗節點</span>':'')+'</h2>'+
-      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px">'+
-        '<div class="muted" style="font-size:14px">'+(it[3]&&it[4]?esc(fmtDate(it[3])+' ～ '+fmtDate(it[4])):(it[3]?esc(fmtDate(it[3])+' 起'):'日期尚未設定'))+'</div>'+
-        '<button class="light" style="font-size:12px;padding:8px 11px;white-space:nowrap" onclick="editScheduleDates('+ti+','+j+')">調整時間</button>'+
-      '</div>'+
+      '<h2 style="margin:9px 0 5px">'+esc(it[0])+'</h2>'+
     '</div>'+
-    '<div class="section"><b>前置條件</b><span class="muted">'+done+'/'+checks.length+'</span></div>'+
+    '<div class="section"><b>注意事項</b></div>'+
     '<div class="card">'+
-      (checks.length?checks.map((c,i)=>
-        '<label class="row" style="cursor:pointer">'+
-          '<input type="checkbox" '+(c.done?'checked':'')+' onchange="toggleLibraryCheck('+ti+','+j+','+i+',this.checked)" style="width:20px;height:20px;margin:0;flex:none">'+
-          '<span style="flex:1;'+(c.done?'text-decoration:line-through;color:#999':'')+'">'+esc(c.text)+'</span>'+
-        '</label>'
-      ).join(''):'<div class="empty">尚未設定前置條件</div>')+
-      '<button class="light" style="width:100%;margin-top:10px" onclick="editLibraryChecks('+ti+','+j+')">編輯前置條件</button>'+
+      ((it[1]||[]).length?(it[1]||[]).map(note=>'<div class="row"><span style="flex:1">'+esc(note)+'</span></div>').join(''):'<div class="empty">尚未設定注意事項</div>')+
+      '<button class="light" style="margin-top:10px" onclick="addLibraryItemNote(\'2022\','+ti+','+j+')">＋ 新增注意事項</button>'+
     '</div>'+
-    '<div class="section"><b>施工安排</b></div>'+
+    '<div class="section"><b>確認清單</b><span class="muted">'+done+'/'+checks.length+'</span></div>'+
     '<div class="card">'+
-      '<div class="row"><div style="flex:1"><div class="muted">進場關係</div><b>'+esc(relationLabel({plan:it[5]||{}},items))+'</b></div></div>'+
-      '<div class="row"><div style="flex:1"><div class="muted">工程進度表的下一個事項</div><b>→ '+esc(progressNextFor2022(ti,j)||'後續未設定')+'</b></div></div>'+ (it[7]?'<div class="warn"><b>◆ 主要查驗節點</b><br>做到這裡要停下來確認，完成查驗後再進入下一事項。</div>':'')+
-      '<button class="light" style="width:100%;margin-top:10px" onclick="editSchedulePlan('+ti+','+j+')">編輯施工安排</button>'+
+      (checks.length?checks.map((c,i)=>'<label class="row" style="cursor:pointer"><input type="checkbox" '+(c.done?'checked':'')+' onchange="toggleLibraryCheck('+ti+','+j+','+i+',this.checked)" style="width:20px;height:20px;margin:0;flex:none"><span style="flex:1;'+(c.done?'text-decoration:line-through;color:#999':'')+'">'+esc(c.text)+'</span></label>').join(''):'<div class="empty">尚未設定確認項目</div>')+
+      '<button class="light" style="margin-top:10px" onclick="editLibraryChecks('+ti+','+j+')">＋ 新增確認項目</button>'+
     '</div>'+
-    '<div class="hint">這裡是工程庫的標準內容。之後新增工程時，可以從工程庫套用，再在該工程裡個別調整。</div>';
+    '<div class="section"><b>參考照片</b><button class="light" onclick="addLibraryItemPhoto(\'2022\','+ti+','+j+')">＋ 新增照片</button></div><div class="card library-photo-card">'+libraryItemPhotosHTML('2022',ti,j)+'</div>';
 }
 
 function editScheduleDates(ti,j){
@@ -353,6 +342,12 @@ function toggleLibraryCheck(ti,j,i,checked){
   if(it[6][i])it[6][i].done=!!checked;
   save();
   exampleLibraryItemDetail(ti,j);
+}
+
+function addLibraryItemNote(source,index,j){
+  const trade=source==='2022'?data.trades[index]:libData[index],item=trade?.items?.[j],text=prompt('注意事項');
+  if(!item||!text?.trim())return;
+  if(!Array.isArray(item[1]))item[1]=[];item[1].push(text.trim());source==='2022'?save():saveLib();libraryDetailBySource(source,index,j);
 }
 
 function editLibraryChecks(ti,j){

@@ -34,6 +34,33 @@ function libraryTradePhotosHTML(source,index,t){
     </div>`).join('')}</div>`;
 }
 
+// 施工項目的照片放在既有項目的 metadata slot；工種層既有照片不猜測歸屬，維持原樣。
+function libraryItemPhotoBucket(source,index,itemIndex,create){
+  const trade=source==='2022'?data.trades[index]:libData[index],item=trade?.items?.[itemIndex];
+  if(!item)return null;
+  if(!item[10]?.photos&&!create)return {trade,item,photos:[]};
+  item[10]={...(item[10]||{})};if(!Array.isArray(item[10].photos))item[10].photos=[];
+  return {trade,item,photos:item[10].photos};
+}
+function libraryItemPhotosHTML(source,index,itemIndex){
+  const bucket=libraryItemPhotoBucket(source,index,itemIndex),photos=bucket?.photos||[];
+  return photos.length?'<div class="library-photo-grid">'+photos.map((p,i)=>'<div class="library-photo"><img src="'+esc(p.data)+'" alt="'+esc(p.title||'參考照片')+'"><div class="library-photo-info"><div class="library-photo-title">'+esc(p.title||'參考照片')+'</div>'+(p.note?'<div class="library-photo-meta">'+esc(p.note)+'</div>':'')+'<div class="library-photo-actions"><button class="library-photo-delete" onclick="removeLibraryItemPhoto(\''+esc(source)+'\','+index+','+itemIndex+','+i+')">刪除</button></div></div></div>').join('')+'</div>':'<div class="empty">尚未建立參考照片</div>';
+}
+function addLibraryItemPhoto(source,index,itemIndex){
+  if(!libraryItemPhotoBucket(source,index,itemIndex,true))return;
+  openModal('<h2>新增參考照片</h2><label>照片</label><input id="libraryItemPhoto" type="file" accept="image/*" multiple><label>照片標題</label><input id="libraryItemPhotoTitle" placeholder="例如：完成範例"><label>說明</label><textarea id="libraryItemPhotoNote" placeholder="例如：管根需加強防水"></textarea><div class="actions"><button class="light" onclick="closeModal()">取消</button><button onclick="saveLibraryItemPhotos(\''+esc(source)+'\','+index+','+itemIndex+')">儲存</button></div>');
+}
+async function saveLibraryItemPhotos(source,index,itemIndex){
+  const bucket=libraryItemPhotoBucket(source,index,itemIndex,true),input=document.getElementById('libraryItemPhoto');
+  if(!bucket||!input?.files?.length){alert('請先選擇照片');return;}
+  const title=document.getElementById('libraryItemPhotoTitle').value.trim()||'參考照片',note=document.getElementById('libraryItemPhotoNote').value.trim();
+  try{for(const file of Array.from(input.files))bucket.photos.push({id:Date.now()+'_'+Math.random().toString(36).slice(2,7),data:await resizeLibraryPhoto(file),title,note,date:new Date().toLocaleDateString('zh-TW')});source==='2022'?save():saveLib();closeModal();libraryDetailBySource(source,index,itemIndex);}catch(error){alert('照片上傳失敗：'+(error.message||'請稍後再試。'));}
+}
+function removeLibraryItemPhoto(source,index,itemIndex,photoIndex){
+  const bucket=libraryItemPhotoBucket(source,index,itemIndex);if(!bucket?.photos?.[photoIndex]||!confirm('刪除這張參考照片？'))return;
+  bucket.photos.splice(photoIndex,1);source==='2022'?save():saveLib();libraryDetailBySource(source,index,itemIndex);
+}
+
 /* ===== Google Drive 照片雲端版 =====
    此頁面以 Google Apps Script HtmlService 開啟時，會使用 google.script.run
    將照片直接上傳到 Google Drive。離線直接開啟 HTML 時則保留原本功能。
