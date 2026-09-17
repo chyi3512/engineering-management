@@ -106,9 +106,16 @@ function projectOverviewCompactNode(root,project){
   const normalize=value=>String(value||'').replace(/^確認\s*/, '').trim(),confirmed=new Set(checks.map(item=>normalize(item.text||item.label))),notes=(step.notes||[]).filter(note=>!confirmed.has(normalize(note))),refs=Array.isArray(step.referencePhotos)?step.referencePhotos:[],photos=typeof projectStepPhotos==='function'?projectStepPhotos(project,index):[];
   root.innerHTML='<button class="site-item-text" onclick="openProject('+project.id+',\'inspection\')"><b>確認清單</b><span class="muted">'+(checks.length&&done===checks.length?'已完成 ':'')+done+' / '+checks.length+'　›</span></button><details class="node-section"><summary class="node-section-head"><b>施工筆記</b><span class="muted">'+notes.length+'則</span><span>›</span></summary>'+ (notes.length?notes.map(note=>'<div class="muted node-note">'+esc(note)+'</div>').join(''):'<div class="muted node-empty">尚無施工筆記</div>')+'<button class="light node-small-button" onclick="addNote('+project.id+','+index+')">＋ 新增施工筆記</button></details><button class="site-item-text" onclick="openProject('+project.id+',\'overview\')"><b>參考照片</b><span class="muted">'+refs.length+' 張　›</span></button><button class="site-item-text" onclick="openProject('+project.id+',\'overview\')"><b>本案照片</b><span class="muted">'+photos.length+' 張　›</span></button>';
 }
+function projectSiteConfirmationAccordion(root){
+  if(root.classList.contains('node-template'))return;
+  const checks=root.querySelector(':scope [data-site-checks]'),card=checks?.parentElement;if(!checks||!card||card.querySelector(':scope > details'))return;
+  const inputs=Array.from(checks.querySelectorAll('[data-site-check]')),done=inputs.filter(input=>input.checked).length,allDone=inputs.length>0&&done===inputs.length,details=document.createElement('details'),summary=document.createElement('summary');
+  details.className='node-acceptance node-confirmation';summary.className='node-section-head';summary.innerHTML='<b>現場確認</b><span class="muted">'+(allDone?'已完成':'待確認')+'</span><span class="muted">'+done+' / '+inputs.length+'</span><span class="node-acceptance-chevron" aria-hidden="true">⌄</span>';
+  details.append(summary);while(card.firstChild)details.append(card.firstChild);card.append(details);
+}
 function bindProjectSite(project){
   for(const root of main.querySelectorAll('[data-site-project]')){
-    projectOverviewCompactNode(root,project);
+    projectSiteConfirmationAccordion(root);
     projectSiteNotesAccordion(root);
     root.addEventListener('click',projectSiteAction);
     root.addEventListener('change',projectSiteInput);
