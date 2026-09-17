@@ -1,5 +1,6 @@
 /* 正式現場日報：只呈現現場紀錄，不推測進度或下一工種。 */
-function findProjectSiteReport(projectId,reportId){return dailyProject(projectId)?.siteReports?.find(report=>report.id===reportId);}
+function findProjectSiteReport(projectId,reportId){const project=dailyProject(projectId);return [...(project?.siteReportPreviews||[]),...(project?.siteReports||[])].find(report=>report.id===reportId);}
+function finalizeProjectSiteReport(projectId,report){const project=dailyProject(projectId);if(!project||!report?.preview)return;projectSiteUpdate(project,()=>{const formal={...report,preview:false,finalizedAt:new Date().toISOString()};project.siteReports=[...(project.siteReports||[]).filter(item=>item.id!==report.id),formal];project.siteReportPreviews=(project.siteReportPreviews||[]).filter(item=>item.id!==report.id);});report.preview=false;}
 function projectSiteReportRows(report,key){return Array.isArray(report[key])?report[key]:[];}
 function projectSiteReportBody(report,photoURLs={}){
   const cell=value=>esc(value==null?'':value).replace(/\n/g,'<br>');
@@ -15,14 +16,17 @@ async function projectSiteReportPhotoURLs(report){
 function viewProjectSiteReport(projectId,reportId){
   const report=findProjectSiteReport(projectId,reportId);if(!report)return;
   releaseDailyPhotoViews();
-  main.innerHTML='<section class="project-site" id="psReportRoot"><button class="back" id="psReportReturn">← 返回工程</button><div class="site-actions"><button id="psReportExcel">匯出 Excel</button><button class="light" id="psReportPDF">匯出 PDF／列印</button></div><p class="muted" role="status" id="psReportStatus">已保存日報快照。Excel 為 A4 直式一頁；PDF 請於列印視窗選擇儲存為 PDF。</p><div class="site-report-preview">'+projectSiteReportBody(report)+'</div></section>';
+  main.innerHTML='<section class="project-site" id="psReportRoot"><button class="back" id="psReportReturn">← 返回工程</button><div class="site-actions"><button id="psReportExcel">匯出 Excel</button><button class="light" id="psReportPDF">匯出 PDF／列印</button><button class="light" id="psReportSend">＋ 寄送</button></div><p class="muted" role="status" id="psReportStatus">'+(report.preview?'今日預覽，尚未正式輸出。':'已保存正式日報。')+' Excel 為 A4 直式一頁；PDF 請於列印視窗選擇儲存為 PDF。</p><div class="site-report-preview">'+projectSiteReportBody(report)+'</div></section>';
   document.getElementById('psReportReturn').onclick=()=>openProject(dailyProject(projectId).id);
   const status=document.getElementById('psReportStatus');
-  document.getElementById('psReportExcel').onclick=async function(){this.disabled=true;try{await exportProjectSiteExcel(report);status.textContent='Excel 已匯出（A4 直式一頁）';}catch(error){status.textContent='匯出未完成：'+error.message;}finally{this.disabled=false;}};
-  document.getElementById('psReportPDF').onclick=()=>printProjectSiteReport(report);
+  document.getElementById('psReportExcel').onclick=async function(){this.disabled=true;try{await exportProjectSiteExcel(report);finalizeProjectSiteReport(projectId,report);status.textContent='Excel 已匯出（A4 直式一頁）';}catch(error){status.textContent='匯出未完成：'+error.message;}finally{this.disabled=false;}};
+  document.getElementById('psReportPDF').onclick=()=>{finalizeProjectSiteReport(projectId,report);printProjectSiteReport(report);};
+  document.getElementById('psReportSend').onclick=()=>openProjectSiteReportSend(projectId,report);
   const root=document.getElementById('psReportRoot');
   projectSiteReportPhotoURLs(report).then(urls=>{if(root.isConnected)root.querySelector('.site-report-preview').innerHTML=projectSiteReportBody(report,urls);}).catch(error=>{if(root.isConnected)root.querySelector('[role=status]').textContent=error.message;});
 }
+const PROJECT_SITE_REPORT_RECIPIENT_TYPES=['業主','老闆','公司','自己','其他'];
+function openProjectSiteReportSend(projectId,report){const project=dailyProject(projectId),subject=(project.name||'工程')+'｜'+report.date+' 工程日報',body='您好，\n\n附件為 '+(project.name||'工程')+'\n'+report.date+' 工程日報。\n\n請查收，謝謝。\n\n附件：\n工程日報 PDF';openModal('<div class="project-site"><h2>寄送工程日報</h2><label>收件人 Email<textarea id="psReportRecipients" placeholder="可用 Enter 或逗號分隔多個 Email" required></textarea></label><div class="actions"><button class="light" onclick="closeModal()">取消</button><button id="psReportSendConfirm">寄送</button></div><p class="muted" id="psReportSendMessage"></p></div>');document.getElementById('psReportSendConfirm').onclick=()=>{const recipients=[...new Set(document.getElementById('psReportRecipients').value.split(/[\s,;]+/).map(value=>value.trim()).filter(Boolean))];if(!recipients.length||recipients.some(value=>!/^\S+@\S+\.\S+$/.test(value))){document.getElementById('psReportSendMessage').textContent='請輸入有效 Email。';return;}finalizeProjectSiteReport(projectId,report);window.location.href='mailto:'+encodeURIComponent(recipients.join(','))+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);closeModal();};}
 async function buildProjectSiteWorkbook(report){
   const Excel=await loadDailyReportExcel(),book=new Excel.Workbook();book.creator='工程管理系統';book.created=new Date(report.createdAt);
   const sheet=book.addWorksheet('工程日報');sheet.columns=[{width:9},{width:17},{width:17},{width:18},{width:18},{width:14}];
