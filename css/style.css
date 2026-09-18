@@ -182,8 +182,9 @@
 
 
 /* Only the active project overview; schedule/inspection and bottom navigation retain their styles. */
-.project-overview{padding-bottom:24px;overflow-wrap:anywhere}
-.project-overview .card{padding:16px;margin:8px 0}
+.project-overview{--overview-inset:16px;--overview-section-gap:20px;padding-bottom:24px;overflow-wrap:anywhere}
+.project-overview .card{padding:var(--overview-inset);margin:8px 0;width:100%;box-sizing:border-box}
+.project-overview>.section,.project-overview>.project-site>.section{padding-inline:var(--overview-inset)}
 .project-overview .section{margin:20px 0 8px;gap:8px}
 .project-overview .section>b{font-size:16px}
 .project-overview .buildflow-tabs{display:grid;grid-template-columns:repeat(3,1fr);margin:8px 0;gap:4px}
@@ -210,7 +211,7 @@
 .project-overview .node-photo-info{min-width:0}
 .project-overview .node-photo-title{font-size:14px;line-height:1.5}
 .project-overview .node-photo-cell input{width:100%;min-width:0;margin:6px 0 2px;padding:6px 8px;font-size:16px;background:#fff;border:1px solid #e8e8e5;border-radius:8px;min-height:34px}
-.project-overview .node-photo-footer{display:flex;align-items:center;gap:4px}
+.project-overview .node-photo-footer{margin-top:2px}
 .project-overview .node-photo-footer time{font-size:11px;line-height:1.4;flex:1}
 .project-overview .node-photo-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .project-overview .node-photo-actions button{min-height:36px;padding:8px 10px;font-size:13px}
@@ -220,9 +221,22 @@
 .project-overview .site-row-menu>summary::-webkit-details-marker{display:none}
 .project-overview .site-row-menu>div{position:absolute;right:0;top:100%;z-index:3;background:#fff;box-shadow:0 3px 12px #0002;padding:4px;border-radius:10px;min-width:76px}
 .project-overview .site-row-menu button{display:block;background:transparent;color:#444;width:100%;min-height:36px;padding:8px}
-.project-overview .site-record-group+.site-record-group{margin-top:20px}
+.project-overview .site-record-group+.site-record-group{margin-top:var(--overview-section-gap)}
+.project-overview .site-record-group h4{font-size:13px;font-weight:500;color:#333;margin:12px 0 4px}
+.project-overview .site-record-group h3+h4{margin-top:0}
 .project-overview .site-record-group h3{font-size:14px;font-weight:600;margin:0 0 8px;color:#222}
-.project-overview .site-record-group .site-check-row,.project-overview .site-record-group [data-site-appointments]>.row{display:grid;grid-template-columns:20px minmax(0,1fr) 40px;gap:10px;min-height:48px;padding:4px 0;border-bottom:1px solid #eee}
+.project-overview .site-record-group .site-check-row,.project-overview .site-record-group [data-site-appointments]>.row{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;min-height:48px;padding:4px 0;border-bottom:1px solid #eee}
+.project-overview .site-record-detail{min-width:0;width:100%}
+.project-overview .site-record-detail>summary,.project-overview .site-followup-add>summary{display:block;list-style:none;cursor:pointer}
+.project-overview .site-record-detail>summary::marker,.project-overview .site-followup-add>summary::marker{content:""}
+.project-overview .site-record-detail>summary::-webkit-details-marker,.project-overview .site-followup-add>summary::-webkit-details-marker{display:none}
+.project-overview .site-record-group .site-record-detail>summary{padding:8px 0;min-height:44px}
+.project-overview .site-record-actions{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0 8px}
+.project-overview .site-record-actions button{min-height:34px;padding:6px 10px;font-size:12px;background:#f3f3f1;color:#444;font-weight:500}
+.project-overview .node-photo-footer>summary{min-height:28px;padding:4px 0}
+.project-overview .site-record-group [data-site-appointments]>p,.project-overview .site-record-group [data-daily-records]>.muted{margin:0;padding:2px 0;font-size:12px}
+.project-overview .site-record-group .site-check{min-width:20px}
+.project-overview .site-followup-add>summary.site-record-add{min-height:32px}
 .project-overview .site-record-group .site-check{display:flex;align-items:center;margin:0;padding:0}
 .project-overview .site-record-group .muted{font-size:12px;line-height:1.5;margin-top:3px}
 .project-overview .site-record-group .site-record-add{background:transparent;color:#555;padding:6px 0;margin-top:4px;min-height:36px;font-size:13px;font-weight:500;text-align:left}

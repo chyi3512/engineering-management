@@ -1,19 +1,19 @@
 /* Bump VERSION whenever a deployed app-shell file changes. */
-const VERSION = '20260918-layout4';
+const VERSION = '20260918-layout5';
 const PREFIX = 'engineering-management-pwa:' + self.registration.scope + ':';
 const CACHE = PREFIX + VERSION;
 const SHELL = [
   './index.html',
   './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
-  './css/style.css?v=20260918layout4', './css/pwa.css?v=20260910pwa1',
+  './css/style.css?v=20260918layout5', './css/pwa.css?v=20260910pwa1',
   './js/data.js?v=20260910cloud1', './js/app.js?v=20260916buildflow1',
   './js/equipment-quotes.js?v=20260910equipment1', './js/photos.js?v=20260918library3',
   './js/trades.js?v=20260918library3', './js/schedule.js?v=20260918library3',
   './js/workflow.js?v=20260910inlineui2', './js/project-data.js?v=20260910deleteui2',
-  './js/projects.js?v=20260918layout4', './js/methods.js?v=202609092035',
+  './js/projects.js?v=20260918layout5', './js/methods.js?v=202609092035',
   './js/daily-report-photos.js?v=20260909site1', './js/daily-reports.js?v=202609092035',
-  './js/daily-report-export.js?v=202609092035', './js/project-site.js?v=20260918layout4',
+  './js/daily-report-export.js?v=202609092035', './js/project-site.js?v=20260918layout5',
   './js/project-site-report.js?v=20260909site1', './js/checklists.js?v=20260910checklist2',
   './js/cloud-sync.js?v=20260910cloud1', './js/init.js?v=20260910cloud1', './js/pwa.js?v=20260910pwa1',
   './js/vendor/exceljs-4.4.0.min.js'
