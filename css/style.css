@@ -154,6 +154,44 @@
 .swd-gantt-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}.swd-schedule-modal select,.swd-schedule-modal input{font-size:16px}
 @media(max-width:480px){.buildflow-gantt-head,.buildflow-gantt-row{grid-template-columns:82px var(--gantt-width)}.buildflow-gantt-name{padding:8px 4px}}
 
+/* 專案概要：僅整理手機首頁的密度、對齊與層級，不變更資料或互動。 */
+main:has(.buildflow-tabs)> .card:first-of-type{padding:13px 16px;margin:6px 0 8px}
+main:has(.buildflow-tabs)> .card:first-of-type h2{font-size:20px;margin:4px 0}
+main:has(.buildflow-tabs)> .card:first-of-type .bar{margin:9px 0 5px!important}
+main:has(.buildflow-tabs)> .card:first-of-type> b{display:none}
+.buildflow-tabs{margin:8px 0;gap:4px;overflow:visible}
+.buildflow-tabs button{flex:1;min-height:36px;padding:8px 10px;font-size:13px;text-align:center}
+.buildflow-overview-stats{grid-template-columns:1fr auto;gap:8px;padding:12px 16px!important;margin:8px 0!important}
+.buildflow-overview-stats>div{display:flex;align-items:baseline;gap:6px}
+.buildflow-overview-stats span,.buildflow-overview-stats b{display:inline;margin:0!important;font-size:13px}
+.buildflow-overview-stats b{font-weight:600}
+main:has(.buildflow-tabs) .section{margin-top:20px;margin-bottom:7px}
+main:has(.buildflow-tabs) .node-current-card{padding:14px 16px;margin-top:0}
+main:has(.buildflow-tabs) .node-current-row{padding:0!important}
+main:has(.buildflow-tabs) .node-current-heading>b{font-size:16px}
+main:has(.buildflow-tabs) .node-current-heading .muted{font-size:13px}
+main:has(.buildflow-tabs) .node-template{margin-top:8px}
+main:has(.buildflow-tabs) .node-template .node-section{padding:12px 0}
+main:has(.buildflow-tabs) .node-section-head{margin-bottom:6px}
+main:has(.buildflow-tabs) .node-section-head>b{font-size:15px}
+main:has(.buildflow-tabs) .node-check-row{min-height:42px;font-size:14px}
+main:has(.buildflow-tabs) .node-photo-strip{margin:6px 0}
+main:has(.buildflow-tabs) .node-photo img{width:56px;height:56px}
+main:has(.buildflow-tabs) .buildflow-gantt-head>div:first-child{padding:6px;font-size:11px}
+main:has(.buildflow-tabs) .buildflow-gantt-day{padding:5px 2px;font-size:9px}
+main:has(.buildflow-tabs) .buildflow-gantt-track{min-height:40px}
+main:has(.buildflow-tabs) .buildflow-gantt-bar{top:10px;height:20px;padding:3px 5px;border-radius:5px}
+main:has(.buildflow-tabs) .project-site .card{padding:12px 16px;margin:6px 0}
+main:has(.buildflow-tabs) .project-site .section{margin-top:16px}
+main:has(.buildflow-tabs) .site-check-row{min-height:42px}
+main:has(.buildflow-tabs) .project-site .site-item-text{padding:7px 0;font-size:14px}
+main:has(.buildflow-tabs) .project-site .site-check{min-height:40px;min-width:38px}
+main:has(.buildflow-tabs) .project-site input[type=checkbox]{width:19px;height:19px}
+main:has(.buildflow-tabs)> .project-site:last-child .card{display:flex;align-items:center;gap:12px}
+main:has(.buildflow-tabs)> .project-site:last-child .card p{flex:1;margin:0}
+main:has(.buildflow-tabs)> .project-site:last-child .card button{flex:none;min-height:38px;padding:9px 11px;white-space:nowrap}
+@media(max-width:390px){main:has(.buildflow-tabs)> .project-site:last-child .card{align-items:flex-start;flex-wrap:wrap}main:has(.buildflow-tabs)> .project-site:last-child .card button{margin-left:auto}}
+
 /* Compact Checklist library only. */
 .checklist-trade{margin:22px 0}.checklist-trade h3{font-size:16px;margin-bottom:8px}
 .checklist-template-node{border-top:1px solid #d8d8d5;margin:0;padding:10px 0}
