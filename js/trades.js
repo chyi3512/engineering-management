@@ -1,10 +1,18 @@
 let libraryExpanded=new Set();
 function library(e){
-  nav(e);const groups=libraryGroups();
-  main.innerHTML='<div class="section"><div><b>工種庫</b><div class="muted">施工知識與施工範本</div></div><button onclick="newLibraryTrade()">＋ 新增工種</button></div>'+groups.map(t=>{
-    const index=t.source==='2022'?t.ti:t.customIndex,source=t.source;
-    return '<button class="card library-trade-card" style="width:100%;text-align:left;display:flex;align-items:center;gap:10px" onclick="openLibraryTrade(\''+source+'\','+index+')"><div style="flex:1"><b class="library-home-trade-title">'+esc(t.name)+'</b><div class="muted">'+t.items.length+' 個施工項目</div></div><span>›</span></button>';
-  }).join('');
+  nav(e);
+  main.innerHTML='<div class="library-screen"><div class="section"><div><b>工種庫</b><div class="muted">施工知識與施工範本</div></div><button class="light" onclick="newLibraryTrade()">＋ 新增工種</button></div><input type="search" aria-label="搜尋工種或施工項目" placeholder="搜尋工種或施工項目…" oninput="renderLibraryGroups(this.value)"><div id="libraryGroupList"></div></div>';
+  renderLibraryGroups('');
+}
+function renderLibraryGroups(query){
+  const q=String(query||'').trim().toLocaleLowerCase();
+  document.getElementById('libraryGroupList').innerHTML=libraryGroups().map(t=>{
+    const source=t.source,index=source==='2022'?t.ti:t.customIndex,key=source+':'+index;
+    const rows=(t.items||[]).map((item,j)=>({item,j})),matches=rows.filter(row=>String(row.item[0]).toLocaleLowerCase().includes(q));
+    if(q&&!t.name.toLocaleLowerCase().includes(q)&&!matches.length)return '';
+    const preview=(q?matches:rows).slice(0,5),extra=(q?matches:rows).length-preview.length;
+    return `<section class="card library-trade-card"><button class="library-trade-link" onclick="openLibraryTrade('${source}',${index})"><span class="library-trade-head"><b>${esc(t.name)}</b><span class="muted">${rows.length} 個施工項目 ›</span></span><span class="library-preview">${preview.map(row=>esc(row.item[0])).join(' · ')}${extra?' · +'+extra:''}</span></button><details ${libraryExpanded.has(key)?'open':''} ontoggle="rememberLibraryExpanded('${key}',this.open)"><summary>展開施工項目</summary>${(q&&!t.name.toLocaleLowerCase().includes(q)?matches:rows).map(row=>`<button class="library-subitem row" onclick="libraryDetailBySource('${source}',${index},${row.j})"><span>${esc(row.item[0])}</span><span>›</span></button>`).join('')}</details></section>`;
+  }).join('')||'<div class="empty">找不到符合的工種或施工項目</div>';
 }
 const libraryOuterNoteFilters={};
 function libraryOuterTradeNotesHTML(trade,source,index){
@@ -30,17 +38,16 @@ function libraryTradeDetail(tradeName,source,ti,customIndex){
   else if(source==='custom' && libData[customIndex]){ t=libData[customIndex]; notes=Array.isArray(t.notes)?t.notes:[]; }
   if(!t)return library();
   const items=t.items||[], index=source==='2022'?ti:customIndex;
-  main.innerHTML=`<button class="back" onclick="library()">← 返回工種庫</button>
+  main.innerHTML=`<div class="library-screen"><button class="back" onclick="library()">← 返回工種庫</button>
     <div class="card"><h2 class="library-trade-title">${esc(t.name)}</h2><div class="muted">施工知識與施工範本</div></div>
-    <div class="section"><b>施工項目</b></div>
-    <div class="card library-subitems">${items.length?items.map((it,j)=>`<button class="row library-subitem" style="width:100%;cursor:pointer;text-align:left" onclick="libraryDetailBySource('${esc(source)}',${index},${j})"><div style="flex:1"><b>${esc(it[0])}</b></div><span>›</span></button>`).join(''):'<div class="empty">尚未設定施工項目</div>'}</div>
+    <div class="section"><b>施工項目</b><button class="light" onclick="toggleLibraryListEditing('${source}',${index})">${libraryListEditing?'完成':'編輯'}</button></div>
+    <div class="card library-subitems">${items.length?items.map((it,j)=>`<div class="row"><button class="library-subitem" style="flex:1;min-width:0" onclick="libraryDetailBySource('${esc(source)}',${index},${j})">${esc(it[0])} ›</button>${libraryListEditing?libraryRowMenu(`<button onclick="editLibrarySourceItem('${source}',${index},${j})">編輯</button><button onclick="deleteLibrarySourceItem('${source}',${index},${j})">刪除</button><button ${j===0?'disabled':''} onclick="moveLibrarySourceItem('${source}',${index},${j},-1)">上移</button><button ${j===items.length-1?'disabled':''} onclick="moveLibrarySourceItem('${source}',${index},${j},1)">下移</button>`):''}</div>`).join(''):'<div class="empty">尚未設定施工項目</div>'}</div>
     <button class="light" style="margin-top:12px" onclick="addLibrarySourceItem('${esc(source)}',${index})">＋ 新增施工項目</button>
-    ${(t.notes||[]).length||Array.isArray(t.photos)&&t.photos.length?'<div class="hint" style="margin-top:20px">原有未分類的工種注意事項與參考照片已保留，未自動改綁到施工項目，避免資料誤歸屬。</div>':''}`;
+    ${(t.notes||[]).length||Array.isArray(t.photos)&&t.photos.length?'<div class="hint" style="margin-top:20px">原有未分類的工種注意事項與參考照片已保留，未自動改綁到施工項目，避免資料誤歸屬。</div>':''}</div>`;
 }
 
 function addLibrarySourceItem(source,index){
-  const t=source==='2022'?data.trades[index]:libData[index],name=prompt('施工項目名稱');if(!t||!name?.trim())return;
-  t.items.push([name.trim(),[]]);source==='2022'?save():saveLib();libraryTradeDetail(t.name,source,index,index);
+  editLibrarySourceItem(source,index,-1);
 }
 
 function libraryDetailBySource(source,index,j){
@@ -48,14 +55,73 @@ function libraryDetailBySource(source,index,j){
   return libraryDetail(index,j);
 }
 
-function libraryDetail(ti,j){
-  const t=libData[ti],it=t&&t.items[j]; if(!t||!it)return library();const checks=Array.isArray(it[6])?it[6]:[],notes=typeof libraryConstructionNotes==='function'?libraryConstructionNotes(it[1],checks):(it[1]||[]);
-  main.innerHTML='<button class="back" onclick="openLibraryTrade(\'custom\','+ti+')">← 返回施工項目</button>'+
-    '<div class="card"><span class="tag">'+esc(t.name)+'</span><h2 style="margin:9px 0 5px">'+esc(it[0])+'</h2></div>'+
-    '<div class="section"><b>確認清單</b><span class="muted">0 / '+checks.length+'</span></div><div class="card">'+(checks.length?checks.map(check=>'<div class="row"><span style="flex:1">'+esc(check.text||check)+'</span></div>').join(''):'<div class="empty">尚未設定確認清單</div>')+'</div>'+
-    '<details class="node-section" style="margin-top:18px"><summary class="node-section-head"><b>施工筆記</b><span class="muted">'+notes.length+'則</span><span aria-hidden="true">⌄</span></summary><div class="card" style="margin-top:10px">'+(notes.length?notes.map(note=>'<div class="row"><span style="flex:1">'+esc(note)+'</span></div>').join(''):'<div class="empty">尚無施工筆記</div>')+'<button class="light" style="margin-top:10px" onclick="showLibraryItemNoteForm()">＋ 新增施工筆記</button><form id="libraryItemNoteForm" hidden style="margin-top:10px" onsubmit="saveLibraryItemNoteInput(event,\'custom\','+ti+','+j+')"><input name="note" placeholder="輸入施工筆記…" required><button type="submit" class="light">新增</button></form></div></details>'+
-    '<div class="section"><b>參考照片</b><button class="light" onclick="addLibraryItemPhoto(\'custom\','+ti+','+j+')">＋ 新增照片</button></div><div class="card library-photo-card">'+libraryItemPhotosHTML('custom',ti,j)+'</div>';
+function libraryDetail(ti,j){return renderLibraryItem('custom',ti,j);}
+
+// Both existing library sources use the same editor; project completion is never toggled here.
+function libraryItemRef(source,index,j){return (source==='2022'?data.trades[index]:libData[index])?.items?.[j];}
+function saveLibrarySource(source){source==='2022'?save():saveLib();}
+function libraryRowMenu(content){return '<details class="library-menu"><summary aria-label="項目操作">⋯</summary><div>'+content+'</div></details>';}
+function libraryContentMenu(source,index,j,kind,k,length){
+  const args="'"+source+"',"+index+','+j+",'"+kind+"',"+k;
+  return libraryRowMenu('<button onclick="libraryContentAction('+args+',\'edit\')">編輯</button><button onclick="libraryContentAction('+args+',\'delete\')">刪除</button>'+(kind==='check'?'<button '+(k===0?'disabled':'')+' onclick="libraryContentAction('+args+',\'up\')">上移</button><button '+(k===length-1?'disabled':'')+' onclick="libraryContentAction('+args+',\'down\')">下移</button>':''));
 }
+function renderLibraryItem(source,index,j,notesOpen=false){
+  const trade=source==='2022'?data.trades[index]:libData[index],item=trade?.items?.[j];if(!item)return library();
+  const checks=Array.isArray(item[6])?item[6]:[],notes=Array.isArray(item[1])?item[1]:[];
+  const visible=notes.map((text,k)=>({text,k})).filter(note=>libraryConstructionNotes([note.text],checks).length);
+  const args="'"+source+"',"+index+','+j;
+  main.innerHTML='<div class="library-screen"><button class="back" onclick="openLibraryTrade(\''+source+'\','+index+')">← 返回施工項目</button>'+
+    '<div class="section"><div><span class="muted">'+esc(trade.name)+'</span><h2>'+esc(item[0])+'</h2></div>'+libraryRowMenu('<button onclick="editLibrarySourceItem('+args+')">編輯施工項目</button><button onclick="deleteLibrarySourceItem('+args+')">刪除施工項目</button>')+'</div>'+
+    '<div class="section"><b>工程 Checklist</b><span class="muted">'+checks.length+' 項範本</span></div><div class="library-content">'+checks.map((check,k)=>'<div class="row"><span aria-hidden="true">□</span><span class="library-row-text">'+esc(check.text||check.label||check)+'</span>'+libraryContentMenu(source,index,j,'check',k,checks.length)+'</div>').join('')+
+    '<button class="library-add" onclick="showLibraryContentForm(\'check\')">＋ 新增確認項目</button><form id="library-check-form" hidden onsubmit="addLibraryContent(event,'+args+',\'check\')"><input name="text" required placeholder="輸入 Checklist 項目…"><button class="light">新增</button></form></div>'+
+    '<details class="library-notes" '+(notesOpen?'open':'')+'><summary class="section"><b>施工筆記</b><span class="muted">'+visible.length+'則 ⌄</span></summary><div class="library-content">'+visible.map(note=>'<div class="row"><span class="library-row-text">'+esc(note.text)+'</span>'+libraryContentMenu(source,index,j,'note',note.k,notes.length)+'</div>').join('')+
+    '<button class="library-add" onclick="showLibraryContentForm(\'note\')">＋ 新增施工筆記</button><form id="library-note-form" hidden onsubmit="addLibraryContent(event,'+args+',\'note\')"><textarea name="text" required placeholder="輸入施工筆記…"></textarea><button class="light">新增</button></form></div></details>'+
+    '<div class="section"><b>參考照片</b></div><div class="library-reference">'+libraryItemPhotosHTML(source,index,j)+'</div></div>';
+}
+function showLibraryContentForm(kind){const form=document.getElementById('library-'+kind+'-form');form.hidden=false;form.elements.text.focus();}
+function addLibraryContent(event,source,index,j,kind){
+  event.preventDefault();const text=event.currentTarget.elements.text.value.trim(),item=libraryItemRef(source,index,j);if(!text||!item)return;
+  if(source==='2022'&&kind==='note')return librarySharedNotice();
+  const slot=kind==='check'?6:1;if(!Array.isArray(item[slot]))item[slot]=[];
+  item[slot].push(kind==='check'?{text}:text);saveLibrarySource(source);renderLibraryItem(source,index,j,kind==='note');
+}
+function libraryContentAction(source,index,j,kind,k,action){
+  if(source==='2022'&&kind==='note')return librarySharedNotice();
+  const item=libraryItemRef(source,index,j),list=item?.[kind==='check'?6:1];if(!Array.isArray(list)||k<0||k>=list.length)return;
+  if(action==='edit'){
+    const old=list[k],text=prompt(kind==='check'?'編輯 Checklist 項目':'編輯施工筆記',old.text||old.label||old);
+    if(!text?.trim())return;
+    if(typeof old==='object'){if('text' in old||!('label' in old))old.text=text.trim();else old.label=text.trim();}else list[k]=text.trim();
+  }else if(action==='delete'){if(!confirm('刪除此'+(kind==='check'?' Checklist 項目':'施工筆記')+'？'))return;list.splice(k,1);}
+  else{const to=k+(action==='up'?-1:1);if(to<0||to>=list.length)return;[list[k],list[to]]=[list[to],list[k]];}
+  saveLibrarySource(source);renderLibraryItem(source,index,j,kind==='note');
+}
+function librarySharedNotice(){alert('此項目與工程表共用資料。為遵守不修改工程表，需先確認工種庫專用 metadata 方案，才能調整名稱、分類或施工筆記。');}
+function editLibrarySourceItem(source,index,j){
+  if(source==='2022')return librarySharedNotice();
+  const item=libraryItemRef(source,index,j);
+  openModal('<h2>'+(item?'編輯':'新增')+'施工項目</h2><label>施工項目名稱</label><input id="libraryItemName" value="'+esc(item?.[0]||'')+'"><label>所屬工種</label><select id="libraryItemTrade">'+libData.map((trade,k)=>'<option value="'+k+'" '+(k===index?'selected':'')+'>'+esc(trade.name)+'</option>').join('')+'</select><div class="actions"><button class="light" onclick="closeModal()">取消</button><button onclick="saveLibrarySourceItem('+index+','+j+')">儲存</button></div>');
+}
+function saveLibrarySourceItem(index,j){
+  const name=document.getElementById('libraryItemName').value.trim(),target=Number(document.getElementById('libraryItemTrade').value);
+  if(!name||!libData[target])return;
+  let item=j<0?[name,[]]:libData[index]?.items?.[j];if(!item)return;
+  item[0]=name;
+  if(j<0||target!==index){if(j>=0)libData[index].items.splice(j,1);libData[target].items.push(item);j=libData[target].items.length-1;}
+  saveLib();closeModal();renderLibraryItem('custom',target,j);
+}
+function deleteLibrarySourceItem(source,index,j){
+  if(source==='2022')return librarySharedNotice();
+  if(!libraryItemRef(source,index,j)||!confirm('刪除此施工範本與其筆記、參考照片？已套用的專案資料不會刪除。'))return;
+  libData[index].items.splice(j,1);saveLib();openLibraryTrade(source,index);
+}
+function moveLibrarySourceItem(source,index,j,dir){
+  if(source==='2022')return librarySharedNotice();
+  const list=libData[index]?.items,to=j+dir;if(!list||to<0||to>=list.length)return;
+  [list[j],list[to]]=[list[to],list[j]];saveLib();openLibraryTrade(source,index);
+}
+let libraryListEditing=false;
+function toggleLibraryListEditing(source,index){libraryListEditing=!libraryListEditing;openLibraryTrade(source,index);}
 
 function newLibraryTrade(){openModal('<h2>新增工種</h2><label>工種名稱</label><input id="ltn" placeholder="例如：拆除工程"><label>第一個施工項目</label><input id="lti" placeholder="例如：現場保護／拆除前確認"><label>注意事項（每行一項）</label><textarea id="ltno"></textarea><label>下一步</label><input id="ltnx" placeholder="例如：清運完成後進入水電放樣"><div class="actions"><button class="light" onclick="closeModal()">取消</button><button onclick="saveLibraryTrade()">建立</button></div>')}
 

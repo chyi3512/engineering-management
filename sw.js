@@ -1,15 +1,15 @@
 /* Bump VERSION whenever a deployed app-shell file changes. */
-const VERSION = '20260918-overview2';
+const VERSION = '20260918-library3';
 const PREFIX = 'engineering-management-pwa:' + self.registration.scope + ':';
 const CACHE = PREFIX + VERSION;
 const SHELL = [
   './index.html',
   './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
-  './css/style.css?v=20260918overview2', './css/pwa.css?v=20260910pwa1',
+  './css/style.css?v=20260918library3', './css/pwa.css?v=20260910pwa1',
   './js/data.js?v=20260910cloud1', './js/app.js?v=20260916buildflow1',
-  './js/equipment-quotes.js?v=20260910equipment1', './js/photos.js?v=20260910libraryui2',
-  './js/trades.js?v=20260910libraryui2', './js/schedule.js?v=202609092035',
+  './js/equipment-quotes.js?v=20260910equipment1', './js/photos.js?v=20260918library3',
+  './js/trades.js?v=20260918library3', './js/schedule.js?v=20260918library3',
   './js/workflow.js?v=20260910inlineui2', './js/project-data.js?v=20260910deleteui2',
   './js/projects.js?v=20260918overview2', './js/methods.js?v=202609092035',
   './js/daily-report-photos.js?v=20260909site1', './js/daily-reports.js?v=202609092035',

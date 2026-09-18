@@ -43,8 +43,13 @@ function libraryItemPhotoBucket(source,index,itemIndex,create){
   return {trade,item,photos:item[10].photos};
 }
 function libraryItemPhotosHTML(source,index,itemIndex){
-  const bucket=libraryItemPhotoBucket(source,index,itemIndex),photos=bucket?.photos||[];
-  return photos.length?'<div class="library-photo-grid">'+photos.map((p,i)=>'<div class="library-photo"><img src="'+esc(p.data)+'" alt="'+esc(p.title||'參考照片')+'"><div class="library-photo-info"><div class="library-photo-title">'+esc(p.title||'參考照片')+'</div>'+(p.note?'<div class="library-photo-meta">'+esc(p.note)+'</div>':'')+'<div class="library-photo-actions"><button class="library-photo-delete" onclick="removeLibraryItemPhoto(\''+esc(source)+'\','+index+','+itemIndex+','+i+')">刪除</button></div></div></div>').join('')+'</div>':'<div class="empty">尚未建立參考照片</div>';
+  const photos=libraryItemPhotoBucket(source,index,itemIndex)?.photos||[],args="'"+source+"',"+index+','+itemIndex;
+  return '<div class="library-photo-grid">'+photos.map((p,i)=>'<div class="library-photo"><img src="'+esc(p.data)+'" alt="'+esc(p.title||'參考照片')+'"><div class="library-photo-info"><div class="library-photo-title">'+esc(p.title||'參考照片')+'</div>'+(p.note?'<div class="library-photo-meta">'+esc(p.note)+'</div>':'')+libraryRowMenu('<button onclick="editLibraryItemPhoto('+args+','+i+')">編輯說明</button><button onclick="removeLibraryItemPhoto('+args+','+i+')">刪除</button>')+'</div></div>').join('')+'<button class="library-photo-add" onclick="addLibraryItemPhoto('+args+')">＋ 新增照片</button></div>';
+}
+function editLibraryItemPhoto(source,index,itemIndex,photoIndex){
+  const photo=libraryItemPhotoBucket(source,index,itemIndex)?.photos?.[photoIndex];if(!photo)return;
+  const note=prompt('照片說明',photo.note||'');if(note===null)return;
+  photo.note=note.trim();source==='2022'?save():saveLib();libraryDetailBySource(source,index,itemIndex);
 }
 function addLibraryItemPhoto(source,index,itemIndex){
   if(!libraryItemPhotoBucket(source,index,itemIndex,true))return;
