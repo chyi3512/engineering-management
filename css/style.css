@@ -189,6 +189,9 @@
 .project-overview .buildflow-tabs{display:grid;grid-template-columns:repeat(3,1fr);margin:8px 0;gap:4px}
 .project-overview .buildflow-tabs button{min-height:38px;padding:8px;font-size:13px}
 .project-overview .node-current-row>div{min-width:0}
+.project-overview .node-current-row{position:relative}
+.project-overview .node-current-row>.tag{position:absolute;right:0;top:13px}
+.project-overview .node-current-heading{padding-right:46px}
 .project-overview .node-current-row>.tag{flex:none;font-weight:400}
 .project-overview .node-current-heading{display:block}
 .project-overview .node-current-heading>b{font-size:16px;line-height:1.5}
@@ -200,17 +203,30 @@
 .project-overview .node-check-row{min-height:46px;padding:8px 0;font-size:14px}
 .project-overview input[type=checkbox]{width:20px;height:20px;margin:0;flex:none}
 .project-overview .node-small-button{margin-top:10px}
-.project-overview .node-photo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:10px 0}
-.project-overview .node-photo-cell{min-width:0;position:relative}
+.project-overview .node-photo-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:8px 0}
+.project-overview .node-photo-cell{min-width:0;display:grid;grid-template-columns:104px minmax(0,1fr);align-items:start;gap:12px;padding:12px;background:#f7f7f5;border-radius:12px}
 .project-overview .node-photo-cell .node-photo{width:100%;display:block}
-.project-overview .node-photo-cell img{width:100%;height:130px;object-fit:cover;border-radius:10px}
-.project-overview .node-photo-cell input{margin:4px 0;padding:6px;font-size:16px;background:#f8f8f6;border:0}
+.project-overview .node-photo-cell img{width:100%;height:104px;object-fit:cover;border-radius:10px}
+.project-overview .node-photo-info{min-width:0}
+.project-overview .node-photo-title{font-size:14px;line-height:1.5}
+.project-overview .node-photo-cell input{width:100%;min-width:0;margin:6px 0 2px;padding:6px 8px;font-size:16px;background:#fff;border:1px solid #e8e8e5;border-radius:8px;min-height:34px}
+.project-overview .node-photo-footer{display:flex;align-items:center;gap:4px}
+.project-overview .node-photo-footer time{font-size:11px;line-height:1.4;flex:1}
+.project-overview .node-photo-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.project-overview .node-photo-actions button{min-height:36px;padding:8px 10px;font-size:13px}
 .project-overview .site-row-menu{position:relative;flex:none;margin-left:auto}
-.project-overview .site-row-menu>summary{list-style:none;cursor:pointer;min-height:36px;min-width:36px;padding:8px;text-align:center}
+.project-overview .site-row-menu>summary{display:flex;align-items:center;justify-content:center;list-style:none;cursor:pointer;min-height:44px;width:40px;padding:8px;text-align:center}
+.project-overview .site-row-menu>summary::marker{content:""}
 .project-overview .site-row-menu>summary::-webkit-details-marker{display:none}
 .project-overview .site-row-menu>div{position:absolute;right:0;top:100%;z-index:3;background:#fff;box-shadow:0 3px 12px #0002;padding:4px;border-radius:10px;min-width:76px}
 .project-overview .site-row-menu button{display:block;background:transparent;color:#444;width:100%;min-height:36px;padding:8px}
-.project-overview .node-photo-cell>.site-row-menu{position:absolute;right:4px;top:4px;background:#fffffff0;border-radius:8px}
+.project-overview .site-record-group+.site-record-group{margin-top:20px}
+.project-overview .site-record-group h3{font-size:14px;font-weight:600;margin:0 0 8px;color:#222}
+.project-overview .site-record-group .site-check-row,.project-overview .site-record-group [data-site-appointments]>.row{display:grid;grid-template-columns:20px minmax(0,1fr) 40px;gap:10px;min-height:48px;padding:4px 0;border-bottom:1px solid #eee}
+.project-overview .site-record-group .site-check{display:flex;align-items:center;margin:0;padding:0}
+.project-overview .site-record-group .muted{font-size:12px;line-height:1.5;margin-top:3px}
+.project-overview .site-record-group .site-record-add{background:transparent;color:#555;padding:6px 0;margin-top:4px;min-height:36px;font-size:13px;font-weight:500;text-align:left}
+.project-overview .site-record-group .site-row-menu{align-self:start}
 .project-overview .site-check-row,.project-overview [data-site-appointments]>.row{min-height:46px;gap:8px;padding:8px 0;align-items:center}
 .project-overview .site-check-row>span,.project-overview [data-site-appointments]>.row>div{min-width:0}
 .project-overview .project-site .card .muted:empty{display:none}
@@ -220,7 +236,10 @@
 .project-overview .report-short p{margin:5px 0 0;font-size:12px;line-height:1.5}
 .project-overview .report-short>button{min-height:40px;margin-left:auto;padding:10px}
 .project-overview .report-short>[role=status]:empty{display:none}
-.project-overview .upcoming-row{display:grid;grid-template-columns:minmax(0,1fr) auto 30px;gap:10px;align-items:center;padding:12px 0;min-height:48px;border-bottom:1px solid #eee;font-size:14px}
+.project-overview .upcoming-row{display:grid;grid-template-columns:minmax(0,1fr) 94px 36px;column-gap:10px;align-items:center;padding:12px 0;min-height:48px;border-bottom:1px solid #eee;font-size:14px;line-height:1.5}
+.project-overview .upcoming-row>span:first-child{min-width:0;overflow-wrap:anywhere}
+.project-overview .upcoming-row>span:nth-child(2){text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
+.project-overview .upcoming-row>span:last-child{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
 .project-overview .upcoming-row:last-child{border:0}
 .project-overview .upcoming-row>.muted{text-align:right;font-size:12px}
 .project-overview .section>button{background:transparent;color:#666;font-size:12px;padding:7px}
