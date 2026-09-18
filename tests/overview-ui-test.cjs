@@ -32,6 +32,11 @@ const compact=c.projectSiteAppointmentsHTML({siteAppointments:[{id:'a',date:'202
 assert.ok(compact.includes('site-record-detail')&&!compact.includes('site-row-menu')&&!compact.includes('⋯'));
 assert.ok(compact.indexOf('data-site-appointment-check')<compact.indexOf('<details'),'checkbox is outside expandable row');
 assert.ok(compact.includes('edit-appointment')&&compact.includes('remove-appointment'),'actions retained inside expanded row');
+const completed=c.projectSiteAppointmentsHTML({siteAppointments:[{id:'done',date:'2026-09-18',text:'完成事項',category:'廠商',done:true,status:'待確認'}]},true,true);
+assert.ok(completed.includes('record-complete')&&completed.includes('已完成')&&completed.includes('checked'));
+assert.ok(!completed.includes('opacity')&&!completed.includes('line-through'),'completed content remains legible');
+assert.equal((completed.match(/class="record-party"/g)||[]).length,1);
+assert.equal((completed.match(/class="record-meta"/g)||[]).length,1);
 const recordHTML=c.projectDailyRecordsHTML({siteDays:{'2026-09-18':{date:'2026-09-18',records:[{id:'r1',text:'泥作進場',kind:'處理'}]}}},'2026-09-18','處理');
 assert.ok(!recordHTML.includes('⋯')&&recordHTML.includes('edit-daily-record')&&recordHTML.includes('remove-daily-record'));
 assert.ok(recordHTML.indexOf('data-daily-record-check')<recordHTML.indexOf('<details'));
