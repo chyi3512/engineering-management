@@ -221,11 +221,14 @@
 .project-overview .site-row-menu>summary::-webkit-details-marker{display:none}
 .project-overview .site-row-menu>div{position:absolute;right:0;top:100%;z-index:3;background:#fff;box-shadow:0 3px 12px #0002;padding:4px;border-radius:10px;min-width:76px}
 .project-overview .site-row-menu button{display:block;background:transparent;color:#444;width:100%;min-height:36px;padding:8px}
-.project-overview .site-record-group+.site-record-group{margin-top:var(--overview-section-gap)}
-.project-overview .site-record-group h4{font-size:13px;font-weight:500;color:#333;margin:12px 0 4px}
-.project-overview .site-record-group h3+h4{margin-top:0}
-.project-overview .site-record-group h3{font-size:14px;font-weight:600;margin:0 0 8px;color:#222}
-.project-overview .site-record-group .site-check-row,.project-overview .site-record-group [data-site-appointments]>.row{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;min-height:48px;padding:4px 0;border-bottom:1px solid #eee}
+.project-overview .site-record-sections{padding:24px 20px}
+.project-overview .record-section+.record-section{margin-top:24px}
+.project-overview .record-section-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.project-overview .record-section-title{font-size:20px;font-weight:600;line-height:1.3;margin:0;min-width:0;color:#222}
+.project-overview .record-section-add{flex:none;background:transparent;border:0;color:#555;font-size:15px;font-weight:500;min-height:44px;padding:8px 0 8px 8px;white-space:nowrap}
+.project-overview .site-record-group .site-check-row,.project-overview .site-record-group [data-site-appointments]>.row{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;min-height:48px;padding:0;align-items:start;border:0;font-size:15px;line-height:1.5}
+.project-overview .record-row>input[type=checkbox],.project-overview .record-row>.site-check{margin-top:13px;min-height:20px}
+.project-overview .record-row-main{min-width:0;overflow-wrap:anywhere}
 .project-overview .site-record-detail{min-width:0;width:100%}
 .project-overview .site-record-detail>summary,.project-overview .site-followup-add>summary{display:block;list-style:none;cursor:pointer}
 .project-overview .site-record-detail>summary::marker,.project-overview .site-followup-add>summary::marker{content:""}
@@ -234,7 +237,7 @@
 .project-overview .site-record-actions{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0 8px}
 .project-overview .site-record-actions button{min-height:34px;padding:6px 10px;font-size:12px;background:#f3f3f1;color:#444;font-weight:500}
 .project-overview .node-photo-footer>summary{min-height:28px;padding:4px 0}
-.project-overview .site-record-group [data-site-appointments]>p,.project-overview .site-record-group [data-daily-records]>.muted{margin:0;padding:2px 0;font-size:12px}
+.project-overview .site-record-group [data-site-appointments]>.record-empty,.project-overview .site-record-group [data-daily-records]>.record-empty{margin:0;padding:0;font-size:15px;font-weight:400;line-height:1.5}
 .project-overview .site-record-group .site-check{min-width:20px}
 .project-overview .site-followup-add>summary.site-record-add{min-height:32px}
 .project-overview .site-record-group .site-check{display:flex;align-items:center;margin:0;padding:0}
@@ -262,3 +265,12 @@
 .project-overview .overview-project-head h2{font-size:20px;margin:0}
 .project-overview .overview-project-head p{margin:8px 0 0}
 .project-overview .overview-project-head>.back{display:block;margin-left:auto;padding:6px 0 0;font-size:12px}
+.project-overview .overview-week-brief{display:none}
+.project-overview .overview-week-table{overflow-x:auto}
+@media(max-width:600px){
+  .project-overview .overview-week-brief{display:block;font-size:15px;line-height:1.6}
+  .project-overview .overview-week-table{display:none}
+  .project-overview .upcoming-row{grid-template-columns:minmax(0,1fr) 42px;row-gap:4px;border:0;padding:10px 0}
+  .project-overview .upcoming-row>span:first-child{grid-column:1/-1}
+  .project-overview .upcoming-row>span:nth-child(2){text-align:left}
+}
