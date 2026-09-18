@@ -42,4 +42,24 @@ for(const kind of ['處理','待辦']){
 project.siteAppointments[0].done=true;project.siteAppointments[0].completedAt='2026-09-17';
 c.refreshProjectSite(project);assert.match(list.innerHTML,/確認浴室磁磚顏色/,'completion remains on selected completion date');
 root.dataset.siteDate='2026-09-19';c.refreshProjectSite(project);assert.match(list.innerHTML,/尚無待確認/);
-console.log('PASS actual coordination submit, immediate display, reload, empty state, selected date, handling/todo add and completed date filtering');
+let editor,restored;
+c.document.createElement=()=>editor={setAttribute(){},focus(){},select(){},replaceWith(node){restored=node;},blur(){this.onblur();}};
+const button={dataset:{itemId:project.siteAppointments[0].id},replaceWith(){},focus(){}};
+c.projectRecordInlineEdit(button,root,project);
+editor.value='修改磁磚顏色';editor.onkeydown({key:'Enter',preventDefault(){}});
+assert.equal(project.siteAppointments[0].text,'修改磁磚顏色');
+assert.equal(JSON.parse(saved).siteAppointments[0].text,'修改磁磚顏色');
+assert.equal(restored,button);
+c.projectRecordInlineEdit(button,root,project);
+editor.value='取消內容';editor.onkeydown({key:'Escape',preventDefault(){}});
+editor.onblur();assert.equal(project.siteAppointments[0].text,'修改磁磚顏色');
+const record=project.siteDays['2026-09-17'].records[0];
+root.dataset.siteDate='2026-09-18';
+const checkbox={dataset:{dailyRecordDate:'2026-09-17',dailyRecordCheck:record.id},checked:true,
+  closest:()=>root,matches:()=>false,hasAttribute:name=>name==='data-daily-record-check'};
+c.projectSiteInput({target:checkbox});
+assert.match(c.projectDailyRecordsHTML(project,'2026-09-18','處理'),/處理 test/,'carried item remains after completion on selected date');
+const dailyButton={dataset:{recordId:record.id,recordDate:'2026-09-17'},replaceWith(){},focus(){}};
+c.projectRecordInlineEdit(dailyButton,root,project);editor.value='現場紀錄修改';editor.onblur();
+assert.equal(project.siteDays['2026-09-17'].records[0].text,'現場紀錄修改');
+console.log('PASS actual submit, reload, date filtering, handling/todo add, inline Enter/blur persistence and Escape cancellation');

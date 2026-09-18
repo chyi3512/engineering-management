@@ -254,13 +254,13 @@
 .project-overview .overview-week-table{overflow-x:auto}
 /* Daily record layout is scoped to its real render root, independent of outer wrappers. */
 .project-overview [data-site-overview-records] .site-record-sections{padding:0 20px}
-.project-overview [data-site-overview-records] .record-section{padding:20px 0;margin:0}
+.project-overview [data-site-overview-records] .record-section{padding:12px 0;margin:0}
 .project-overview [data-site-overview-records] .record-section-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 12px}
-.project-overview [data-site-overview-records] .record-section-title{font-size:20px;font-weight:700;line-height:1.3;margin:0;color:#222}
-.project-overview [data-site-overview-records] .record-section-add{background:transparent;border:0;color:#555;font-size:14px;font-weight:500;min-height:34px;padding:6px 0 6px 8px;flex:none;white-space:nowrap}
-.project-overview [data-site-overview-records] .record-row{display:flex;align-items:flex-start;gap:12px;min-height:48px;padding:12px 0;border:0;border-bottom:1px solid #f1f1ef;font-size:16px;line-height:1.45}
+.project-overview [data-site-overview-records] .record-section-title{font-size:18px;font-weight:500;line-height:1.3;margin:0;color:#222}
+.project-overview [data-site-overview-records] .record-section-add{background:transparent;border:0;color:#555;font-size:14px;font-weight:400;min-height:34px;padding:6px 0 6px 8px;flex:none;white-space:nowrap}
+.project-overview [data-site-overview-records] .record-row{display:flex;align-items:center;gap:10px;height:52px;min-height:52px;padding:0;border:0;border-bottom:1px solid #f1f1ef;font-size:16px;line-height:1.45}
 .project-overview [data-site-overview-records] .record-row:last-child{border-bottom:0}
-.project-overview [data-site-overview-records] .record-row>input[type=checkbox]{width:24px;height:24px;min-width:24px;max-width:24px;min-height:24px;flex:0 0 24px;margin:2px 0 0;padding:0;box-sizing:border-box;border-radius:7px}
+.project-overview [data-site-overview-records] .record-row>input[type=checkbox]{width:22px;height:22px;min-width:22px;max-width:22px;min-height:22px;flex:0 0 22px;margin:0;padding:0;box-sizing:border-box;border-radius:7px}
 .project-overview [data-site-overview-records] .record-row-main{flex:1;min-width:0;overflow-wrap:anywhere}
 .project-overview [data-site-overview-records] .record-row-main>summary{display:block;list-style:none;min-height:24px;padding:0;cursor:pointer}
 .project-overview [data-site-overview-records] .record-row-main>summary::marker{content:""}
@@ -277,7 +277,15 @@
 .project-overview [data-site-overview-records] .record-item-title{font-size:16px;line-height:1.45;font-weight:500;color:#222}
 .project-overview [data-site-overview-records] .record-party,.project-overview [data-site-overview-records] .record-meta{font-size:13px;line-height:1.45;font-weight:400;color:#777}
 .project-overview [data-site-overview-records] .record-meta{margin-top:3px}
-.project-overview [data-site-overview-records] .record-complete .record-item-title{color:#777}
+.project-overview [data-site-overview-records] .record-complete .record-item-title{opacity:.5;text-decoration:line-through}
+.project-overview [data-site-overview-records] .record-edit-text{display:block;width:100%;min-height:36px;padding:6px 0;text-align:left;background:transparent;border:0;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.project-overview [data-site-overview-records] .record-inline-input{width:100%;height:36px;min-height:36px;margin:0;padding:6px 8px;font-size:16px}
+.project-overview [data-site-overview-records] .record-menu{position:relative;flex:0 0 36px}
+.project-overview [data-site-overview-records] .record-menu>summary{display:flex;align-items:center;justify-content:center;width:36px;min-height:36px;padding:0;list-style:none;cursor:pointer;color:#777}
+.project-overview [data-site-overview-records] .record-menu>summary::marker{content:""}
+.project-overview [data-site-overview-records] .record-menu>summary::-webkit-details-marker{display:none}
+.project-overview [data-site-overview-records] .record-menu-items{position:absolute;right:0;top:100%;z-index:5;min-width:130px;max-width:230px;padding:6px 8px;background:#fff;border:1px solid #eee;border-radius:8px}
+.project-overview [data-site-overview-records] .record-menu-items button{display:block;width:100%;background:transparent;color:#555;min-height:32px;padding:6px 0;text-align:left;font-size:13px;font-weight:400}
 @media(max-width:600px){
   .project-overview .overview-week-brief{display:block;font-size:15px;line-height:1.6}
   .project-overview .overview-week-table{display:none}
